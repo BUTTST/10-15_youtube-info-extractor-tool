@@ -16,6 +16,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "api", "vite.config.ts", "postcss.config.js", "tailwind.config.js"],
+  "include": ["src"],
+  "exclude": ["api", "node_modules", "dist"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
