@@ -3,9 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { getApiKey as getApiKeyFromStorage } from "@/lib/storage";
-
-export const getApiKey = () => getApiKeyFromStorage();
+import { getApiKey, saveApiKey } from "@/lib/storage";
 
 const ApiKeyManager = () => {
   const [apiKey, setApiKey] = useState(getApiKey() || "");

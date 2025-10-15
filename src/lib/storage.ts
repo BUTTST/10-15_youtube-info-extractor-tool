@@ -1,3 +1,34 @@
+const API_KEY_STORAGE = 'yt-tools-api-key';
+const DEFAULT_TAB_STORAGE = 'yt-tools-default-tab';
+
+export const saveApiKey = (apiKey: string) => {
+  try {
+    localStorage.setItem(API_KEY_STORAGE, apiKey);
+  } catch (error) {
+    console.error("Failed to save API key", error);
+  }
+};
+
+export const getApiKey = (): string | null => {
+  try {
+    return localStorage.getItem(API_KEY_STORAGE);
+  } catch (error) {
+    console.error("Failed to get API key", error);
+    return null;
+  }
+};
+
+export const saveDefaultTab = (tab: string) => {
+  localStorage.setItem(DEFAULT_TAB_STORAGE, tab);
+};
+
+export const getDefaultTab = () => {
+  return localStorage.getItem(DEFAULT_TAB_STORAGE) || 'caption';
+};
+
+// --- History Management (Example) ---
+const HISTORY_STORAGE_KEY = 'yt-tools-history';
+
 export interface HistoryItem {
   type: 'caption' | 'thumbnail' | 'info';
   videoId: string;
@@ -6,39 +37,22 @@ export interface HistoryItem {
   timestamp: number;
 }
 
-const HISTORY_KEY = 'yt-tools-history';
-const MAX_HISTORY_ITEMS = 50;
-
-export const saveToHistory = (item: HistoryItem) => {
-  try {
-    const history = getHistory();
-    history.unshift(item);
-    
-    // 限制歷史紀錄數量
-    if (history.length > MAX_HISTORY_ITEMS) {
-      history.splice(MAX_HISTORY_ITEMS);
-    }
-    
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  } catch (error) {
-    console.error('儲存歷史紀錄失敗:', error);
-  }
-};
-
 export const getHistory = (): HistoryItem[] => {
   try {
-    const data = localStorage.getItem(HISTORY_KEY);
-    return data ? JSON.parse(data) : [];
+    const history = localStorage.getItem(HISTORY_STORAGE_KEY);
+    return history ? JSON.parse(history) : [];
   } catch (error) {
-    console.error('讀取歷史紀錄失敗:', error);
+    console.error("Failed to get history", error);
     return [];
   }
 };
 
+export const saveToHistory = (item: HistoryItem) => {
+  const history = getHistory();
+  history.unshift(item); // Add to the beginning
+  localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(history.slice(0, 50))); // Limit history size
+};
+
 export const clearHistory = () => {
-  try {
-    localStorage.removeItem(HISTORY_KEY);
-  } catch (error) {
-    console.error('清除歷史紀錄失敗:', error);
-  }
+  localStorage.removeItem(HISTORY_STORAGE_KEY);
 };
