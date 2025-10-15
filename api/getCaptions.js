@@ -32,7 +32,11 @@ module.exports = async function handler(req, res) {
     res.status(200).json(data);
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'An internal server error occurred' });
+    console.error('Error in getCaptions:', error);
+    res.status(500).json({ 
+      error: 'An internal server error occurred',
+      message: error.message,
+      details: error.toString()
+    });
   }
 }
