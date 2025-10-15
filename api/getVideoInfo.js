@@ -1,9 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-module.exports = async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+module.exports = async function handler(req, res) {
   const { url } = req.query;
 
   if (!url || typeof url !== 'string') {
@@ -57,7 +52,7 @@ module.exports = async function handler(
   }
 }
 
-function extractVideoId(url: string): string | null {
+function extractVideoId(url) {
   const regex = /(?:v=|youtu\.be\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
   const match = url.match(regex);
   return match && match[1] ? match[1] : null;
