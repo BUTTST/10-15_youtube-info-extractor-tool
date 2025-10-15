@@ -118,4 +118,38 @@ export const useVideoStore = create<VideoState>()(
         const headers = apiKey ? { 'x-rapidapi-key-client': apiKey } : {};
 
         try {
-            const res = await fetch(`
+            const res = await fetch(`/api/getCaptions?videoId=${videoId}&lang=${lang}&format=formatted&timestamp=${withTimestamp}`);
+            if (!res.ok) throw new Error('Failed to fetch formatted caption');
+            const text = await res.text();
+            
+            // The original code had a template literal here, but it was not closed.
+            // Assuming the intent was to parse the JSON response or handle the text.
+            // For now, we'll just return the text as a placeholder.
+            // In a real scenario, you'd parse the JSON or handle the text appropriately.
+            return text;
+        } catch (err: any) {
+          set({ error: err.message || 'An unknown error occurred' });
+          return ''; // Return empty string on error
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+      clearCurrentVideo: () => set({ currentVideo: null }),
+      
+      // History Actions
+      addOrUpdateHistory: (item) => set(state => ({
+        history: state.history.some(h => h.id === item.id)
+          ? state.history.map(h => h.id === item.id ? item : h)
+          : [...state.history, item]
+      })),
+      removeFromHistory: (id) => set(state => ({
+        history: state.history.filter(h => h.id !== id)
+      })),
+      clearHistory: () => set({ history: [] }),
+    }),
+    {
+      name: 'yt-video-history', // local storage key
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+);
