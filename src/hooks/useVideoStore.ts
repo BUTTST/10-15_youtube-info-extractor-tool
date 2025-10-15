@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { getApiKey } from '@/lib/storage';
 
 // --- Type Definitions ---
 export interface VideoDetails {
@@ -117,57 +118,4 @@ export const useVideoStore = create<VideoState>()(
         const headers = apiKey ? { 'x-rapidapi-key-client': apiKey } : {};
 
         try {
-            const res = await fetch(`/api/getCaptions?videoId=${videoId}&lang=${lang}&format=formatted&timestamp=${withTimestamp}`, { headers });
-            if (!res.ok) throw new Error('Failed to fetch formatted caption');
-            const text = await res.text();
-            
-            // Update the current video's formatted captions in the state
-            set(state => {
-              if (state.currentVideo) {
-                const updatedVideo = {
-                  ...state.currentVideo,
-                  formattedCaptions: {
-                    ...state.currentVideo.formattedCaptions,
-                    [`${lang}-${withTimestamp}`]: text
-                  }
-                };
-                // Also update history
-                get().addOrUpdateHistory(updatedVideo);
-                return { currentVideo: updatedVideo };
-              }
-              return {};
-            });
-            return text;
-        } catch (err: any) {
-            set({ error: err.message });
-            return "";
-        } finally {
-            set({ isLoading: false });
-        }
-      },
-      
-      clearCurrentVideo: () => set({ currentVideo: null, urlInput: '' }),
-
-      // --- History Actions ---
-      addOrUpdateHistory: (item) => {
-        set(state => {
-          const history = state.history.filter(h => h.id !== item.id);
-          const newHistory = [item, ...history];
-          return { history: newHistory };
-        });
-      },
-
-      removeFromHistory: (id) => {
-        set(state => ({
-          history: state.history.filter(h => h.id !== id),
-        }));
-      },
-
-      clearHistory: () => set({ history: [] }),
-    }),
-    {
-      name: 'yt-video-history', // local storage key
-      storage: createJSONStorage(() => localStorage),
-    }
-  )
-);
+            const res = await fetch(`
