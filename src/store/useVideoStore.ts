@@ -33,6 +33,7 @@ interface VideoState {
 }
 
 export interface HistoryItem extends VideoDetails {
+  url: string;
   queriedAt: string;
 }
 
@@ -79,7 +80,8 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
       // Add to history
       const newHistoryItem: HistoryItem = { 
-        ...details, 
+        ...details,
+        url: url,
         queriedAt: new Date().toISOString() 
       };
       get().addHistoryItem(newHistoryItem);
