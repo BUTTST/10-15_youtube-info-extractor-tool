@@ -1,14 +1,12 @@
-# Rapid API Links
-
-| Rapid API Usage 主控台 | Youtube v3 Alternative | CC 字幕 |
-| :---------------------- | :--------------------- | :------------------------------------------------------ |
-| [Link](https://rapidapi.com/developer/billing/subscriptions-and-usage) | [Link](https://rapidapi.com/ytdlfree/api/youtube-v3-alternative) | [Link](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) |
-
----
-
 # YT 共享快捷資訊 PWA
 
-這是一個以手機為優先的漸進式網路應用程式 (PWA)，旨在讓使用者能快速獲取 YouTube 影片的詳細資訊。使用者可以將此應用安裝至手機主畫面，並透過系統原生的「分享」功能，直接將 YouTube App 中正在觀看的影片傳送至本應用進行分析。
+這是以手機為優先所開發的漸進式應用程式 (PWA)，<br>
+讓使用者快速獲取 YouTube 影片的詳細資訊。<br>
+<br>
+使用者可以將此應用安裝至手機主畫面，並透過系統原生的「分享」功能，<br>
+直接將 YouTube App 中正在觀看的影片傳送至本應用進行分析。
+
+| [Rapid API Usage 主控台](https://rapidapi.com/developer/billing/subscriptions-and-usage) | [Youtube v3 Alternative](https://rapidapi.com/ytdlfree/api/youtube-v3-alternative) | [CC 字幕](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) |
 
 ## ✨ 主要功能 (Features)
 
@@ -29,4 +27,4 @@
 *   **樣式**: Tailwind CSS
 *   **狀態管理**: Zustand
 *   **後端 & 部署**: Vercel Serverless Functions & Vercel Platform
-*   **PWA 圖示生成**: Sharp
+*   **PWA 圖示生成**: Sharp 

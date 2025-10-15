@@ -1,30 +1,34 @@
-import { useVideoStore } from '../store/useVideoStore';
+import { useVideoStore } from "@/hooks/useVideoStore";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export function YouTubeInputForm() {
-  const { url, setUrl, fetchVideoInfo, isLoading } = useVideoStore();
+  const { urlInput, setUrlInput, fetchVideoInfo, isLoading, clearCurrentVideo, currentVideo } = useVideoStore();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchVideoInfo();
+  const handleBlur = () => {
+    // Only fetch if there's a URL and it's different from the current one
+    if (urlInput && urlInput !== currentVideo?.details.url) {
+      fetchVideoInfo(urlInput);
+    }
   };
+  
+  const handleClear = () => {
+    clearCurrentVideo();
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
-      <input
-        type="text"
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-        placeholder="貼上 YouTube 影片連結"
-        className="flex-grow p-2 rounded-md bg-gray-200 dark:bg-gray-700 border border-transparent focus:border-blue-500 focus:outline-none"
+    <div className="flex w-full items-center space-x-2">
+      <Input
+        type="url"
+        placeholder="貼上 YouTube 影片連結..."
+        value={urlInput}
+        onChange={(e) => setUrlInput(e.target.value)}
+        onBlur={handleBlur}
         disabled={isLoading}
       />
-      <button
-        type="submit"
-        className="p-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-500"
-        disabled={isLoading}
-      >
-        {isLoading ? '載入中...' : '獲取資訊'}
-      </button>
-    </form>
+      <Button onClick={handleClear} variant="outline" disabled={isLoading || !currentVideo}>
+        清除
+      </Button>
+    </div>
   );
 }
