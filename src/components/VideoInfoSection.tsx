@@ -2,7 +2,7 @@ import { useVideoStore } from "@/hooks/useVideoStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Calendar, User, ExternalLink } from "lucide-react";
+import { Eye, Calendar, User, ExternalLink, Info, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function VideoInfoSection() {
@@ -24,7 +24,19 @@ export function VideoInfoSection() {
   }
 
   if (!currentVideo) {
-    return null;
+    return (
+      <Card className="glass-effect border-primary/20">
+        <CardContent className="py-16">
+          <div className="text-center text-muted-foreground space-y-4">
+            <Info className="w-16 h-16 mx-auto opacity-30" />
+            <div>
+              <p className="text-lg font-medium">尚未載入影片</p>
+              <p className="text-sm mt-2">請在上方輸入 YouTube 連結並點擊「提取」</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   const { details } = currentVideo;
@@ -112,7 +124,19 @@ export function ThumbnailSection() {
     }
 
     if (!currentVideo) {
-        return null;
+        return (
+          <Card className="glass-effect border-primary/20">
+            <CardContent className="py-24">
+              <div className="text-center text-muted-foreground space-y-4">
+                <ImageIcon className="w-20 h-20 mx-auto opacity-30" />
+                <div>
+                  <p className="text-lg font-medium">尚無縮圖</p>
+                  <p className="text-sm mt-2">請先載入 YouTube 影片</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
     }
 
     return (

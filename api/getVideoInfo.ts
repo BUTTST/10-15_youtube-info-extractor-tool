@@ -30,9 +30,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Invalid YouTube URL or video ID' });
   }
 
-  // Use client-provided key first, fallback to environment variable
+  // Use client-provided key first, fallback to server environment variable
   const clientApiKey = req.headers['x-rapidapi-key-client'] as string;
-  const apiKey = clientApiKey || process.env.VITE_RAPIDAPI_KEY || 'f89f95249amsh669a5069f1ce946p178a57jsn6b1e586b0f93';
+  const apiKey = clientApiKey || process.env.RAPIDAPI_KEY || 'f89f95249amsh669a5069f1ce946p178a57jsn6b1e586b0f93';
 
   const options = {
     method: 'GET',

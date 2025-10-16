@@ -72,7 +72,27 @@ export function CaptionSection() {
     });
   };
 
-  if (!currentVideo) return null;
+  if (!currentVideo) {
+    return (
+      <Card className="glass-effect border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Languages className="w-5 h-5 text-primary" />
+            字幕提取
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-12 text-muted-foreground space-y-4">
+            <Languages className="w-16 h-16 mx-auto opacity-30" />
+            <div>
+              <p className="text-lg font-medium">尚無影片</p>
+              <p className="text-sm mt-2">請先載入 YouTube 影片以查看可用字幕</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   
   if (!availableCaptions || availableCaptions.length === 0) {
     return (

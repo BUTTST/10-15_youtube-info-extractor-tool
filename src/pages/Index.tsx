@@ -33,18 +33,21 @@ const Index = () => {
   }, [isDark]);
 
   useEffect(() => {
-    // 處理分享目標 API
+    // 處理分享目標 API（只在首次載入時執行）
     const urlParams = new URLSearchParams(window.location.search);
     const sharedUrl = urlParams.get('url');
-    if (sharedUrl) {
+    if (sharedUrl && !urlInput) {
       setUrlInput(sharedUrl);
       fetchVideoInfo(sharedUrl);
       toast({
         title: "已接收分享",
         description: "YouTube 連結已自動填入",
       });
+      // 清除 URL 參數避免重複觸發
+      window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [setUrlInput, fetchVideoInfo, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 只在組件掛載時執行一次
 
   const toggleTheme = () => {
     setIsDark(!isDark);
