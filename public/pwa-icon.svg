@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <!-- Background -->
+  <rect width="512" height="512" fill="#8B5CF6" rx="96"/>
+  
+  <!-- YouTube Play Button Style Icon -->
+  <g transform="translate(256, 256)">
+    <!-- White background for play button -->
+    <rect x="-140" y="-90" width="280" height="180" fill="#FFFFFF" rx="20"/>
+    
+    <!-- Play triangle -->
+    <path d="M -40 -50 L -40 50 L 60 0 Z" fill="#8B5CF6"/>
+    
+    <!-- CC Symbol -->
+    <g transform="translate(0, 85)">
+      <text x="-25" y="15" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#FFFFFF">CC</text>
+    </g>
+  </g>
+  
+  <!-- Title -->
+  <text x="256" y="450" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#FFFFFF" text-anchor="middle">YT 工具</text>
+</svg>
+
