@@ -1,30 +1,122 @@
-# YT 共享快捷資訊 PWA
+# 🎬 YouTube 資訊提取器
 
-這是以手機為優先所開發的漸進式應用程式 (PWA)，<br>
-讓使用者快速獲取 YouTube 影片的詳細資訊。<br>
-<br>
-使用者可以將此應用安裝至手機主畫面，並透過系統原生的「分享」功能，<br>
-直接將 YouTube App 中正在觀看的影片傳送至本應用進行分析。
+一個現代化、美觀的 YouTube 影片資訊提取工具，採用 PWA 架構，支援影片詳情、高清縮圖和完整字幕提取。
 
-| [Rapid API Usage 主控台](https://rapidapi.com/developer/billing/subscriptions-and-usage) | [Youtube v3 Alternative](https://rapidapi.com/ytdlfree/api/youtube-v3-alternative) | [CC 字幕](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) |
+[![部署在 Vercel](https://vercel.com/button)](https://vercel.com)
 
-## ✨ 主要功能 (Features)
+## ✨ 主要功能
 
-*   **📱 PWA 安裝**: 可將應用程式新增至手機主畫面，提供離線存取與原生應用般的體驗。
-*   **🔗 快捷分享整合**: 支援 Android/iOS 的 Web Share Target API，可直接從 YouTube App 分享影片至此應用。
-*   **⌨️ 手動輸入**: 支援手動貼上或輸入 YouTube 影片連結。
-*   **📊 資訊獲取**:
-    *   **影片詳情**: 包含標題、作者、觀看次數、發布日期。
-    *   **高畫質縮圖**: 自動抓取最高解析度的影片縮圖。
-    *   **CC 字幕**: 獲取影片所有可用的 CC 字幕軌，並提供一鍵複製功能。
-*   **📖 歷史紀錄**: 所有查詢過的影片都會被儲存在裝置的本機儲存空間 (LocalStorage) 中，方便日後查看與管理。
-*   **☀️/🌙 明暗主題**: 支援手動切換亮色與暗色主題，並會記住您的偏好設定。
-*   **🚀 響應式設計**: 介面為手機優先，同時也適用於桌面瀏覽器。
+### 🎯 核心功能
+- **📱 PWA 支援** - 可安裝到手機主畫面，提供原生應用般的體驗
+- **🔗 Web Share Target** - 支援從 YouTube App 直接分享影片至本應用
+- **🎨 現代化 UI** - 採用毛玻璃效果、漸變色和流暢動畫
+- **⚡ 快速提取** - 支援完整 URL、短連結或直接輸入影片 ID
 
-## 🛠️ 技術堆疊 (Tech Stack)
+### 📊 資訊展示
+- **🖼️ 高清縮圖** - 自動獲取最高解析度的影片縮圖
+- **📝 影片詳情** - 標題、作者、觀看次數、發布日期
+- **💬 完整字幕** - 支援多語言字幕提取，可選擇顯示時間碼
+- **💾 下載功能** - 支援複製和下載字幕文件
 
-*   **前端**: React (Vite + TypeScript)
-*   **樣式**: Tailwind CSS
-*   **狀態管理**: Zustand
-*   **後端 & 部署**: Vercel Serverless Functions & Vercel Platform
-*   **PWA 圖示生成**: Sharp 
+### 📖 歷史管理
+- **自動儲存** - 所有查詢記錄自動保存到本地
+- **快速重載** - 點擊歷史記錄即可重新載入
+- **智能管理** - 支援單筆刪除或全部清空
+
+## 🛠️ 技術架構
+
+### 前端技術
+- **框架**: React 18 + Vite 5
+- **語言**: TypeScript
+- **UI 庫**: Tailwind CSS + shadcn/ui + Radix UI
+- **狀態管理**: Zustand (持久化)
+- **動畫**: Tailwind 動畫 + CSS 過渡效果
+
+### 後端架構  
+- **平台**: Vercel Serverless Functions
+- **API**: RapidAPI
+  - [YouTube v3 Alternative](https://rapidapi.com/ytdlfree/api/youtube-v3-alternative) - 影片資訊
+  - [YouTube Captions](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) - 字幕提取
+
+### PWA 功能
+- **Service Worker** - 離線緩存
+- **Web Share Target** - 原生分享整合
+- **安裝提示** - 可添加到主畫面
+
+## 🚀 快速開始
+
+### 環境需求
+- Node.js 18+
+- npm 或 yarn
+
+### 安裝步驟
+
+```bash
+# 克隆專案
+git clone <repository-url>
+cd youtube-info-extractor-tool
+
+# 安裝依賴
+npm install
+
+# 設定環境變數（可選）
+# 創建 .env.local 文件並添加：
+# VITE_RAPIDAPI_KEY=your_api_key_here
+
+# 啟動開發伺服器
+npm run dev
+
+# 建構生產版本
+npm run build
+
+# 預覽生產版本
+npm run preview
+```
+
+### API 金鑰設定
+
+1. 前往 [RapidAPI](https://rapidapi.com/) 註冊帳號
+2. 訂閱以下 API：
+   - YouTube v3 Alternative
+   - YouTube Captions Transcript
+3. 在應用中可以：
+   - 使用內建的測試 API 金鑰（有限額度）
+   - 在設定中輸入自己的 API 金鑰
+
+## 📱 PWA 安裝
+
+### Android/iOS
+1. 使用瀏覽器開啟應用
+2. 點擊「添加到主畫面」
+3. 完成！現在可以從主畫面啟動
+
+### 分享功能使用
+1. 在 YouTube App 中播放影片
+2. 點擊「分享」按鈕
+3. 選擇「YouTube 資訊提取器」
+4. 自動開啟並提取資訊
+
+## 🎨 設計特色
+
+- **漸變背景** - 動態紫粉漸變效果
+- **毛玻璃卡片** - 半透明模糊背景
+- **流暢動畫** - 頁面載入和互動動畫
+- **響應式佈局** - 適配手機、平板、桌面
+- **深色模式** - 自動適應系統主題
+
+## 🔧 部署到 Vercel
+
+1. Fork 此專案
+2. 在 [Vercel](https://vercel.com) 導入專案
+3. 設定環境變數 `VITE_RAPIDAPI_KEY`
+4. 部署完成！
+
+## 📄 授權
+
+MIT License
+
+## 🙏 致謝
+
+- shadcn/ui - 優秀的 UI 組件庫
+- Radix UI - 無障礙組件基礎
+- RapidAPI - API 服務提供 

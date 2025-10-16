@@ -62,37 +62,60 @@ export const useVideoStore = create<VideoState>()(
 
       fetchVideoInfo: async (url) => {
         if (!url) return;
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null, currentVideo: null });
         
-        const apiKey = getApiKey(); // Get key from local storage
+        const apiKey = getApiKey();
         const headers = apiKey ? { 'x-rapidapi-key-client': apiKey } : {};
 
         try {
+          // 獲取影片資訊
           const infoRes = await fetch(`/api/getVideoInfo?url=${encodeURIComponent(url)}`, { headers });
-          if (!infoRes.ok) throw new Error('Failed to get video details');
+          
+          if (!infoRes.ok) {
+            const errorData = await infoRes.json().catch(() => ({ error: 'Network error' }));
+            throw new Error(errorData.error || 'Failed to fetch video details');
+          }
+          
           const infoData = await infoRes.json();
+          
+          // 提取最高畫質的縮圖
+          let thumbnail = '';
+          if (infoData.thumbnails && Array.isArray(infoData.thumbnails) && infoData.thumbnails.length > 0) {
+            // 獲取最後一個（最高解析度）的縮圖
+            thumbnail = infoData.thumbnails[infoData.thumbnails.length - 1].url;
+          }
           
           const details: VideoDetails = {
             id: infoData.id,
-            title: infoData.title,
-            thumbnail: infoData.thumbnails[infoData.thumbnails.length - 1].url,
-            views: infoData.viewCount,
-            publishDate: infoData.publishedAt,
-            author: infoData.author,
+            title: infoData.title || 'Unknown Title',
+            thumbnail: thumbnail,
+            views: infoData.viewCount || '0',
+            publishDate: infoData.publishedAt || new Date().toISOString(),
+            author: infoData.author || 'Unknown Author',
             url: url
           };
 
-          // Now fetch available captions list
-          const captionsRes = await fetch(`/api/getCaptions?videoId=${details.id}`, { headers });
-          if (!captionsRes.ok) {
-            console.warn("Could not fetch caption list, proceeding without it.");
+          // 獲取字幕列表
+          let captionTracks: CaptionTrack[] = [];
+          try {
+            const captionsRes = await fetch(`/api/getCaptions?videoId=${details.id}`, { headers });
+            if (captionsRes.ok) {
+              const captionsData = await captionsRes.json();
+              
+              // 解析字幕軌道
+              const items = captionsData?.actions?.[0]?.updateengagementpanelaction?.content?.transcriptrenderer?.content?.transcriptsearchpanelrenderer?.footer?.transcriptsubmenurenderer?.items;
+              
+              if (items && Array.isArray(items)) {
+                captionTracks = items.map((item: any) => ({
+                  lang: item.transcriptsubmenuitemrenderer?.title?.simpletext || 'Unknown',
+                  url: item.transcriptsubmenuitemrenderer?.continuation?.reloadcontinuationdata?.continuation || ''
+                }));
+              }
+            }
+          } catch (captionError) {
+            console.warn('Failed to fetch captions:', captionError);
+            // 繼續執行，只是沒有字幕
           }
-          const captionsData = await captionsRes.json();
-          const captionTracks: CaptionTrack[] = captionsData?.actions?.[0]?.updateengagementpanelaction?.content?.transcriptrenderer?.content?.transcriptsearchpanelrenderer?.footer?.transcriptsubmenurenderer?.items?.map((item: any) => ({
-            lang: item.transcriptsubmenuitemrenderer.title.simpletext,
-            url: item.transcriptsubmenuitemrenderer.continuation.reloadcontinuationdata.continuation // This is a simplification
-          })) || [];
-
 
           const newHistoryItem: HistoryItem = {
             id: details.id,
@@ -101,11 +124,15 @@ export const useVideoStore = create<VideoState>()(
             queriedAt: new Date().toISOString(),
           };
 
-          set({ currentVideo: newHistoryItem });
+          set({ currentVideo: newHistoryItem, error: null });
           get().addOrUpdateHistory(newHistoryItem);
 
         } catch (err: any) {
-          set({ error: err.message || 'An unknown error occurred' });
+          console.error('Fetch video info error:', err);
+          set({ 
+            error: err.message || '無法獲取影片資訊，請檢查網址或稍後再試',
+            currentVideo: null
+          });
         } finally {
           set({ isLoading: false });
         }

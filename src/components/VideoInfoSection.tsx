@@ -1,44 +1,97 @@
 import { useVideoStore } from "@/hooks/useVideoStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Eye, Calendar, User, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function VideoInfoSection() {
   const { currentVideo, isLoading } = useVideoStore();
 
   if (isLoading && !currentVideo) {
     return (
-      <Card>
+      <Card className="glass-effect border-primary/20">
         <CardHeader>
-          <Skeleton className="h-6 w-3/4" />
+          <Skeleton className="h-8 w-3/4" />
         </CardHeader>
-        <CardContent className="space-y-2">
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-4 w-1/4" />
+        <CardContent className="space-y-3">
+          <Skeleton className="h-5 w-1/2" />
+          <Skeleton className="h-5 w-1/3" />
+          <Skeleton className="h-5 w-2/3" />
         </CardContent>
       </Card>
     );
   }
 
   if (!currentVideo) {
-    return <p className="text-center text-muted-foreground">請貼上 YouTube 連結以開始。</p>;
+    return null;
   }
 
   const { details } = currentVideo;
   
   const formatViews = (views: string) => {
-    return new Intl.NumberFormat().format(Number(views));
+    const num = Number(views);
+    if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('zh-TW', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{details.title}</CardTitle>
+    <Card className="glass-effect border-primary/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <CardHeader className="relative">
+        <div className="flex items-start justify-between gap-4">
+          <CardTitle className="text-2xl font-bold line-clamp-2 flex-1">
+            {details.title}
+          </CardTitle>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="shrink-0"
+            onClick={() => window.open(details.url, '_blank')}
+          >
+            <ExternalLink className="w-5 h-5" />
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">{details.author}</p>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
-          <span>觀看次數: {formatViews(details.views)}</span>
-          <span>發布日期: {new Date(details.publishDate).toLocaleDateString()}</span>
+      <CardContent className="relative space-y-4">
+        <div className="flex items-center gap-2 text-lg">
+          <User className="w-5 h-5 text-primary" />
+          <span className="font-semibold text-foreground">{details.author}</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex items-center gap-2 bg-secondary/50 p-3 rounded-lg">
+            <Eye className="w-5 h-5 text-accent" />
+            <div>
+              <p className="text-xs text-muted-foreground">觀看次數</p>
+              <p className="text-lg font-bold text-foreground">{formatViews(details.views)}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 bg-secondary/50 p-3 rounded-lg">
+            <Calendar className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-xs text-muted-foreground">發布日期</p>
+              <p className="text-sm font-semibold text-foreground">{formatDate(details.publishDate)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+            影片 ID: {details.id}
+          </Badge>
         </div>
       </CardContent>
     </Card>
@@ -49,7 +102,13 @@ export function ThumbnailSection() {
     const { currentVideo, isLoading } = useVideoStore();
 
     if (isLoading && !currentVideo) {
-        return <Skeleton className="aspect-video w-full rounded-lg" />;
+        return (
+          <Card className="glass-effect border-primary/20">
+            <CardContent className="p-0">
+              <Skeleton className="aspect-video w-full rounded-t-xl" />
+            </CardContent>
+          </Card>
+        );
     }
 
     if (!currentVideo) {
@@ -57,10 +116,20 @@ export function ThumbnailSection() {
     }
 
     return (
-        <img
-            src={currentVideo.details.thumbnail}
-            alt={currentVideo.details.title}
-            className="aspect-video w-full rounded-lg object-cover"
-        />
+        <Card className="glass-effect border-primary/20 overflow-hidden group hover:shadow-xl transition-all duration-300">
+          <CardContent className="p-0 relative">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
+            <img
+                src={currentVideo.details.thumbnail}
+                alt={currentVideo.details.title}
+                className="aspect-video w-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent z-20">
+              <p className="text-white font-medium text-sm line-clamp-2">
+                {currentVideo.details.title}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
     );
 }

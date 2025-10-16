@@ -121,4 +121,18 @@ All colors MUST be HSL.
     backdrop-filter: blur(12px);
     border: 1px solid hsl(var(--border) / 0.5);
   }
+
+  @keyframes gradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  
+  .animate-gradient {
+    animation: gradient 3s ease infinite;
+    background-size: 300% 300%;
+  }
+
+  .bg-300\% {
+    background-size: 300% 300%;
+  }
 }

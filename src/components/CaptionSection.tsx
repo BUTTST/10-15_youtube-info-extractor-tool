@@ -13,12 +13,16 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "./ui/skeleton";
+import { Copy, Download, Languages, Clock, CheckCircle2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export function CaptionSection() {
   const { currentVideo, fetchFormattedCaption, isLoading } = useVideoStore();
   const [selectedLang, setSelectedLang] = useState<string | undefined>(undefined);
   const [withTimestamp, setWithTimestamp] = useState(true);
   const [captionText, setCaptionText] = useState("");
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
 
   const availableCaptions = currentVideo?.captions;
 
@@ -36,9 +40,9 @@ export function CaptionSection() {
       if (cachedCaption) {
         setCaptionText(cachedCaption);
       } else {
-        setCaptionText("載入字幕中...");
+        setCaptionText("📝 載入字幕中...");
         fetchFormattedCaption(currentVideo.id, selectedLang, withTimestamp).then(text => {
-          setCaptionText(text);
+          setCaptionText(text || "❌ 無法載入字幕");
         });
       }
     }
@@ -46,62 +50,130 @@ export function CaptionSection() {
   
   const handleCopy = () => {
     navigator.clipboard.writeText(captionText);
-    // You can add a toast notification here
+    setCopied(true);
+    toast({
+      title: "複製成功",
+      description: "字幕已複製到剪貼簿",
+    });
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownload = () => {
+    const blob = new Blob([captionText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${currentVideo?.details.title || 'captions'}_${selectedLang}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({
+      title: "下載成功",
+      description: "字幕檔案已開始下載",
+    });
   };
 
   if (!currentVideo) return null;
+  
   if (!availableCaptions || availableCaptions.length === 0) {
     return (
-        <Card>
+        <Card className="glass-effect border-primary/20">
             <CardHeader>
-                <CardTitle>字幕</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Languages className="w-5 h-5 text-primary" />
+                  字幕
+                </CardTitle>
             </CardHeader>
             <CardContent>
-                <p>找不到可用的字幕。</p>
+                <div className="text-center py-8 text-muted-foreground">
+                  <Languages className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>此影片沒有可用的字幕</p>
+                </div>
             </CardContent>
         </Card>
     );
   }
 
   return (
-    <Card>
+    <Card className="glass-effect border-primary/20">
       <CardHeader>
-        <CardTitle>字幕</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <Languages className="w-5 h-5 text-primary" />
+          字幕提取
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Languages className="w-4 h-4 text-muted-foreground" />
+            <Label className="text-sm font-medium">選擇語言</Label>
+          </div>
           <Select onValueChange={setSelectedLang} value={selectedLang}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="選擇語言" />
+            <SelectTrigger className="w-full h-11 border-primary/20">
+              <SelectValue placeholder="請選擇字幕語言..." />
             </SelectTrigger>
             <SelectContent>
               {availableCaptions.map((track) => (
                 <SelectItem key={track.lang} value={track.lang}>
-                  {track.lang}
+                  <div className="flex items-center gap-2">
+                    <Languages className="w-4 h-4" />
+                    {track.lang}
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              <Label htmlFor="timestamp-mode" className="text-sm cursor-pointer">
+                顯示時間碼
+              </Label>
+            </div>
             <Switch
               id="timestamp-mode"
               checked={withTimestamp}
               onCheckedChange={setWithTimestamp}
             />
-            <Label htmlFor="timestamp-mode">顯示時間碼</Label>
           </div>
         </div>
 
         {selectedLang && (
-          <div className="space-y-2">
+          <div className="space-y-3 animate-fade-in">
             <Textarea
               readOnly
               value={captionText}
-              className="h-64 w-full"
+              className="h-72 w-full font-mono text-sm border-primary/20 bg-secondary/20"
               placeholder="請先選擇語言以載入字幕..."
             />
-            <Button onClick={handleCopy} disabled={isLoading || !captionText}>複製字幕</Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleCopy} 
+                disabled={isLoading || !captionText}
+                className="flex-1 bg-primary hover:bg-primary/90"
+              >
+                {copied ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    已複製
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 mr-2" />
+                    複製字幕
+                  </>
+                )}
+              </Button>
+              <Button 
+                onClick={handleDownload} 
+                disabled={isLoading || !captionText}
+                variant="outline"
+                className="flex-1"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                下載
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
