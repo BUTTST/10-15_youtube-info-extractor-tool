@@ -43,6 +43,12 @@ export function VideoInfoSection() {
   
   const formatViews = (views: string) => {
     const num = Number(views);
+    if (isNaN(num)) {
+      return '無觀看數據';
+    }
+    if (num === 0) {
+      return '0 次觀看';
+    }
     if (num >= 100000000) {
       // 1亿以上显示"亿"
       return (num / 100000000).toFixed(1) + '億';
@@ -55,7 +61,14 @@ export function VideoInfoSection() {
   }
 
   const formatFullNumber = (views: string) => {
-    return Number(views).toLocaleString('zh-TW');
+    const num = Number(views);
+    if (isNaN(num)) {
+      return '資料不可用';
+    }
+    if (num === 0) {
+      return '0';
+    }
+    return num.toLocaleString('zh-TW');
   }
 
   const formatDate = (dateString: string) => {

@@ -60,17 +60,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await response.json();
     
-    // 格式化回傳數據，確保前端能正確解析
+    // 格式化回傳數據，確保前端能正確解析，處理可能的 null 值
     const formattedData = {
-      id: data.id,
-      title: data.title,
-      author: data.channelTitle,
+      id: data.id || videoId,
+      title: data.title || '無標題影片',
+      author: data.channelTitle || '未知頻道',
       thumbnails: data.thumbnail || [],
-      viewCount: data.viewCount,
-      publishedAt: data.publishDate || data.uploadDate,
-      description: data.description,
-      lengthSeconds: data.lengthSeconds,
-      channelId: data.channelId,
+      viewCount: data.viewCount || '0',
+      publishedAt: data.publishDate || data.uploadDate || new Date().toISOString(),
+      description: data.description || '',
+      lengthSeconds: data.lengthSeconds || '0',
+      channelId: data.channelId || '',
     };
     
     res.status(200).json(formattedData);
