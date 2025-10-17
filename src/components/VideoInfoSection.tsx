@@ -43,10 +43,19 @@ export function VideoInfoSection() {
   
   const formatViews = (views: string) => {
     const num = Number(views);
-    if (num >= 1000000000) return (num / 1000000000).toFixed(1) + 'B';
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
+    if (num >= 100000000) {
+      // 1亿以上显示"亿"
+      return (num / 100000000).toFixed(1) + '億';
+    }
+    if (num >= 10000) {
+      // 1万以上显示"万"
+      return (num / 10000).toFixed(1) + '萬';
+    }
+    return num.toLocaleString('zh-TW');
+  }
+
+  const formatFullNumber = (views: string) => {
+    return Number(views).toLocaleString('zh-TW');
   }
 
   const formatDate = (dateString: string) => {
@@ -83,11 +92,14 @@ export function VideoInfoSection() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-2 bg-secondary/50 p-3 rounded-lg">
+          <div className="flex items-center gap-2 bg-secondary/50 p-3 rounded-lg relative">
             <Eye className="w-5 h-5 text-accent" />
-            <div>
+            <div className="flex-1">
               <p className="text-xs text-muted-foreground">觀看次數</p>
               <p className="text-lg font-bold text-foreground">{formatViews(details.views)}</p>
+            </div>
+            <div className="absolute bottom-1 right-2 text-[18px] text-muted-foreground/45">
+              完整數字：{formatFullNumber(details.views)}
             </div>
           </div>
 

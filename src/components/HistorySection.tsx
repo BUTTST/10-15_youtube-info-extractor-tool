@@ -22,11 +22,10 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export function HistorySection() {
-  const { history, removeFromHistory, clearHistory, fetchVideoInfo, setUrlInput } = useVideoStore();
+  const { history, removeFromHistory, clearHistory, loadFromHistory } = useVideoStore();
 
   const handleHistoryClick = (item: HistoryItem) => {
-    setUrlInput(item.details.url);
-    fetchVideoInfo(item.details.url);
+    loadFromHistory(item);
   };
 
   const formatTimeAgo = (dateString: string) => {

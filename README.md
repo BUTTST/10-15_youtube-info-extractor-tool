@@ -4,6 +4,10 @@
 
 [![部署在 Vercel](https://vercel.com/button)](https://vercel.com)
 
+
+| [Vercel主控台](https://vercel.com/titans-projects-0ee27614/10-15-youtube-info-extractor-tool) | [項目頁面](https://10-15-youtube-info-extractor-tool.vercel.app/) | [YouTube v3 資訊擷取](https://rapidapi.com/ytdlfree/api/youtube-v3-alternative) | [YouTube CC字幕](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) |
+| :---: | :---: | :---: | :---: |
+
 ## ✨ 主要功能
 
 ### 🎯 核心功能
@@ -14,14 +18,18 @@
 
 ### 📊 資訊展示
 - **🖼️ 高清縮圖** - 自動獲取最高解析度的影片縮圖
-- **📝 影片詳情** - 標題、作者、觀看次數、發布日期
-- **💬 完整字幕** - 支援多語言字幕提取，可選擇顯示時間碼
+- **📝 影片詳情** - 標題、作者、觀看次數（中文顯示：億/萬）、發布日期
+- **💬 智能字幕** - 支援多語言字幕提取與類型標注
+  - 自動識別字幕來源（作者上傳 / 自動生成）
+  - 可選擇顯示時間碼
+  - 語言不可用時自動切換替代方案
 - **💾 下載功能** - 支援複製和下載字幕文件
 
 ### 📖 歷史管理
 - **自動儲存** - 所有查詢記錄自動保存到本地
-- **快速重載** - 點擊歷史記錄即可重新載入
-- **智能管理** - 支援單筆刪除或全部清空
+- **智能緩存** - 字幕內容持久化，避免重複抓取浪費 API 額度
+- **快速恢復** - 點擊歷史記錄立即恢復所有已獲取的字幕
+- **靈活管理** - 支援單筆刪除或全部清空
 
 ## 🛠️ 技術架構
 
@@ -59,9 +67,9 @@ cd youtube-info-extractor-tool
 # 安裝依賴
 npm install
 
-# 設定環境變數（可選）
-# 創建 .env.local 文件並添加：
-# VITE_RAPIDAPI_KEY=your_api_key_here
+# 設定環境變數
+# 本地開發：創建 .env 文件並添加：
+# RAPIDAPI_KEY=your_api_key_here
 
 # 啟動開發伺服器
 npm run dev
