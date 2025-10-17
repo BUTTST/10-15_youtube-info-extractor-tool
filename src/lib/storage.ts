@@ -1,22 +1,4 @@
-const API_KEY_STORAGE = 'yt-tools-api-key';
 const DEFAULT_TAB_STORAGE = 'yt-tools-default-tab';
-
-export const saveApiKey = (apiKey: string) => {
-  try {
-    localStorage.setItem(API_KEY_STORAGE, apiKey);
-  } catch (error) {
-    console.error("Failed to save API key", error);
-  }
-};
-
-export const getApiKey = (): string | null => {
-  try {
-    return localStorage.getItem(API_KEY_STORAGE);
-  } catch (error) {
-    console.error("Failed to get API key", error);
-    return null;
-  }
-};
 
 export const saveDefaultTab = (tab: string) => {
   localStorage.setItem(DEFAULT_TAB_STORAGE, tab);

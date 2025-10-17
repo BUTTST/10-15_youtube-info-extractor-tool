@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { getApiKey } from '@/lib/storage';
 
 // --- Type Definitions ---
 export interface VideoDetails {
@@ -66,13 +65,10 @@ export const useVideoStore = create<VideoState>()(
       fetchVideoInfo: async (url) => {
         if (!url) return;
         set({ isLoading: true, error: null, currentVideo: null });
-        
-        const apiKey = getApiKey();
-        const headers = apiKey ? { 'x-rapidapi-key-client': apiKey } : {};
 
         try {
           // 獲取影片資訊
-          const infoRes = await fetch(`/api/getVideoInfo?url=${encodeURIComponent(url)}`, { headers });
+          const infoRes = await fetch(`/api/getVideoInfo?url=${encodeURIComponent(url)}`);
           
           if (!infoRes.ok) {
             const errorData = await infoRes.json().catch(() => ({ error: 'Network error' }));
@@ -101,7 +97,7 @@ export const useVideoStore = create<VideoState>()(
           // 獲取字幕列表
           let captionTracks: CaptionTrack[] = [];
           try {
-            const captionsRes = await fetch(`/api/getCaptions?videoId=${details.id}`, { headers });
+            const captionsRes = await fetch(`/api/getCaptions?videoId=${details.id}`);
             if (captionsRes.ok) {
               const captionsData = await captionsRes.json();
               
@@ -142,21 +138,18 @@ export const useVideoStore = create<VideoState>()(
 
       fetchFormattedCaption: async (videoId, lang, withTimestamp) => {
         set({ isLoading: true });
-        
-        const apiKey = getApiKey();
-        const headers = apiKey ? { 'x-rapidapi-key-client': apiKey } : {};
 
         try {
-            const res = await fetch(`/api/getCaptions?videoId=${videoId}&lang=${lang}&format=text&timestamp=${withTimestamp}`, { headers });
+            const res = await fetch(`/api/getCaptions?videoId=${videoId}&lang=${lang}&format=text&timestamp=${withTimestamp}`);
             if (!res.ok) {
               // 如果该语言的字幕不可用，尝试获取第一个可用的字幕
-              const captionsRes = await fetch(`/api/getCaptions?videoId=${videoId}`, { headers });
+              const captionsRes = await fetch(`/api/getCaptions?videoId=${videoId}`);
               if (captionsRes.ok) {
                 const captionsData = await captionsRes.json();
                 if (captionsData.captions && captionsData.captions.length > 0) {
                   // 使用第一个可用的字幕作为替代
                   const firstCaption = captionsData.captions[0];
-                  const fallbackRes = await fetch(`/api/getCaptions?videoId=${videoId}&lang=${firstCaption.code}&format=text&timestamp=${withTimestamp}`, { headers });
+                  const fallbackRes = await fetch(`/api/getCaptions?videoId=${videoId}&lang=${firstCaption.code}&format=text&timestamp=${withTimestamp}`);
                   if (fallbackRes.ok) {
                     const text = await fallbackRes.text();
                     const warningText = `⚠️ 所選語言字幕不可用，已自動切換到：${firstCaption.lang}\n\n${text}`;
@@ -206,9 +199,7 @@ export const useVideoStore = create<VideoState>()(
         
         try {
           // 重新获取影片详情（免费API，获取最新数据）
-          const apiKey = getApiKey();
-          const headers = apiKey ? { 'x-rapidapi-key-client': apiKey } : {};
-          const res = await fetch(`/api/getVideoInfo?url=${encodeURIComponent(item.details.url)}`, { headers });
+          const res = await fetch(`/api/getVideoInfo?url=${encodeURIComponent(item.details.url)}`);
           
           if (res.ok) {
             const infoData = await res.json();

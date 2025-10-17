@@ -38,9 +38,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Video ID is required' });
   }
 
-  // Use client-provided key first, fallback to server environment variable
-  const clientApiKey = req.headers['x-rapidapi-key-client'] as string;
-  const apiKey = clientApiKey || process.env.RAPIDAPI_KEY || 'f89f95249amsh669a5069f1ce946p178a57jsn6b1e586b0f93';
+  // Use server environment variable only
+  const apiKey = process.env.RAPIDAPI_KEY;
+
+  if (!apiKey) {
+    return res.status(500).json({ 
+      error: 'API key not configured. Please set RAPIDAPI_KEY environment variable.' 
+    });
+  }
 
   // 如果請求格式化字幕和指定語言，獲取該語言的字幕文本
   if (format === 'formatted' && lang) {

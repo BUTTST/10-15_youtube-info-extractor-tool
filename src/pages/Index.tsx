@@ -3,13 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Moon, Sun, Youtube, FileText, Image as ImageIcon, Info, History as HistoryIcon, Settings, Sparkles, Search, X } from "lucide-react";
+import { Moon, Sun, Youtube, FileText, Image as ImageIcon, Info, History as HistoryIcon, Sparkles, Search, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CaptionSection } from "@/components/CaptionSection";
 import { ThumbnailSection } from "@/components/VideoInfoSection";
 import { VideoInfoSection } from "@/components/VideoInfoSection";
 import { HistorySection } from "@/components/HistorySection";
-import ApiKeyManager from "@/components/ApiKeyManager";
 import { useVideoStore } from "@/hooks/useVideoStore";
 
 const Index = () => {
@@ -156,7 +155,7 @@ const Index = () => {
 
           {/* Function Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 h-auto p-1 glass-effect">
+            <TabsList className="grid w-full grid-cols-4 h-auto p-1 glass-effect">
               <TabsTrigger value="info" className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Info className="w-4 h-4" />
                 <span className="hidden sm:inline">影片詳情</span>
@@ -172,10 +171,6 @@ const Index = () => {
               <TabsTrigger value="history" className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <HistoryIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">歷史</span>
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                <Settings className="w-4 h-4" />
-                <span className="hidden sm:inline">設定</span>
               </TabsTrigger>
             </TabsList>
 
@@ -193,10 +188,6 @@ const Index = () => {
 
             <TabsContent value="history" className="mt-6 animate-fade-in">
               <HistorySection />
-            </TabsContent>
-
-            <TabsContent value="settings" className="mt-6 animate-fade-in">
-              <ApiKeyManager />
             </TabsContent>
           </Tabs>
         </div>

@@ -85,11 +85,9 @@ npm run preview
 
 1. 前往 [RapidAPI](https://rapidapi.com/) 註冊帳號
 2. 訂閱以下 API：
-   - YouTube v3 Alternative
-   - YouTube Captions Transcript
-3. 在應用中可以：
-   - 使用內建的測試 API 金鑰（有限額度）
-   - 在設定中輸入自己的 API 金鑰
+   - [YouTube v3 Alternative](https://rapidapi.com/ytdlfree/api/youtube-v3-alternative)
+   - [YouTube Captions Transcript](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner)
+3. 在 Vercel 環境變數中設定 `RAPIDAPI_KEY`（詳見下方部署說明）
 
 ## 📱 PWA 安裝
 
@@ -116,8 +114,18 @@ npm run preview
 
 1. Fork 此專案
 2. 在 [Vercel](https://vercel.com) 導入專案
-3. 設定環境變數 `VITE_RAPIDAPI_KEY`
+3. 設定環境變數：
+   - **Name**: `RAPIDAPI_KEY`（⚠️ 不要使用 `VITE_` 前綴！）
+   - **Value**: 你的 RapidAPI 金鑰
+   - **Environments**: Production, Preview, Development（全選）
 4. 部署完成！
+
+### ⚠️ 重要：環境變數設定
+
+- ✅ 正確：`RAPIDAPI_KEY`（只在後端使用，安全）
+- ❌ 錯誤：`VITE_RAPIDAPI_KEY`（會暴露到前端，不安全！）
+
+本專案採用 Vercel Serverless Functions 架構，API 金鑰只在後端使用，確保安全性。
 
 ## 📄 授權
 
