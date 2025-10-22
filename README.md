@@ -5,7 +5,7 @@
 [![部署在 Vercel](https://vercel.com/button)](https://vercel.com)
 
 
-| [Vercel主控台](https://vercel.com/titans-projects-0ee27614/10-15-youtube-info-extractor-tool) | [項目頁面](https://10-15-youtube-info-extractor-tool.vercel.app/) | [YouTube v3 資訊擷取](https://rapidapi.com/ytdlfree/api/youtube-v3-alternative) | [YouTube CC字幕](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) |
+| [Vercel主控台](https://vercel.com/titans-projects-0ee27614/10-15-youtube-info-extractor-tool) | [項目頁面](https://10-15-youtube-info-extractor-tool.vercel.app/) | [YouTube v31 資訊擷取](https://rapidapi.com/ytdlfree/api/youtube-v31) | [YouTube CC字幕](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) |
 | :---: | :---: | :---: | :---: |
 
 ## ✨ 主要功能
@@ -43,7 +43,7 @@
 ### 後端架構  
 - **平台**: Vercel Serverless Functions
 - **API**: RapidAPI
-  - [YouTube v3 Alternative](https://rapidapi.com/ytdlfree/api/youtube-v3-alternative) - 影片資訊
+  - [YouTube v31](https://rapidapi.com/ytdlfree/api/youtube-v31) - 影片資訊
   - [YouTube Captions](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) - 字幕提取
 
 ### PWA 功能
@@ -85,7 +85,7 @@ npm run preview
 
 1. 前往 [RapidAPI](https://rapidapi.com/) 註冊帳號
 2. 訂閱以下 API：
-   - [YouTube v3 Alternative](https://rapidapi.com/ytdlfree/api/youtube-v3-alternative)
+   - [YouTube v31](https://rapidapi.com/ytdlfree/api/youtube-v31)
    - [YouTube Captions Transcript](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner)
 3. 在 Vercel 環境變數中設定 `RAPIDAPI_KEY`（詳見下方部署說明）
 

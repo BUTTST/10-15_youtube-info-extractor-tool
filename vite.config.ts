@@ -46,12 +46,15 @@ const apiMiddleware: Connect.NextHandleFunction = async (req, res, next) => {
       const apiKey = RAPIDAPI_KEY;
       
       try {
-        const response = await fetch(`https://youtube-v3-alternative.p.rapidapi.com/video?id=${videoId}`, {
-          headers: {
-            'x-rapidapi-key': apiKey,
-            'x-rapidapi-host': 'youtube-v3-alternative.p.rapidapi.com'
+        const response = await fetch(
+          `https://youtube-v31.p.rapidapi.com/videos?part=contentDetails,snippet,statistics&id=${videoId}`,
+          {
+            headers: {
+              'x-rapidapi-key': apiKey,
+              'x-rapidapi-host': 'youtube-v31.p.rapidapi.com'
+            }
           }
-        });
+        );
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -62,16 +65,41 @@ const apiMiddleware: Connect.NextHandleFunction = async (req, res, next) => {
         }
 
         const data = await response.json() as any;
+        
+        // YouTube Data API v3 格式：數據在 items 陣列中
+        if (!data.items || data.items.length === 0) {
+          res.statusCode = 404;
+          res.setHeader('Content-Type', 'application/json');
+          res.end(JSON.stringify({ error: 'Video not found' }));
+          return;
+        }
+
+        const videoData = data.items[0];
+        const snippet = videoData.snippet || {};
+        const statistics = videoData.statistics || {};
+        const contentDetails = videoData.contentDetails || {};
+
+        // 將 ISO 8601 duration 格式轉換為秒數 (PT4M13S -> 253)
+        const convertDurationToSeconds = (duration: string): string => {
+          if (!duration) return '0';
+          const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+          if (!match) return '0';
+          const hours = parseInt(match[1] || '0');
+          const minutes = parseInt(match[2] || '0');
+          const seconds = parseInt(match[3] || '0');
+          return String(hours * 3600 + minutes * 60 + seconds);
+        };
+        
         const formattedData = {
-          id: data.id,
-          title: data.title,
-          author: data.channelTitle,
-          thumbnails: data.thumbnail || [],
-          viewCount: data.viewCount,
-          publishedAt: data.publishDate || data.uploadDate,
-          description: data.description,
-          lengthSeconds: data.lengthSeconds,
-          channelId: data.channelId,
+          id: videoData.id || videoId,
+          title: snippet.title || '無標題影片',
+          author: snippet.channelTitle || '未知頻道',
+          thumbnails: snippet.thumbnails ? Object.values(snippet.thumbnails) : [],
+          viewCount: statistics.viewCount || '0',
+          publishedAt: snippet.publishedAt || new Date().toISOString(),
+          description: snippet.description || '',
+          lengthSeconds: convertDurationToSeconds(contentDetails.duration),
+          channelId: snippet.channelId || '',
         };
         
         res.statusCode = 200;

@@ -43,12 +43,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     method: 'GET',
     headers: {
       'x-rapidapi-key': apiKey,
-      'x-rapidapi-host': 'youtube-v3-alternative.p.rapidapi.com'
+      'x-rapidapi-host': 'youtube-v31.p.rapidapi.com'
     }
   };
 
   try {
-    const response = await fetch(`https://youtube-v3-alternative.p.rapidapi.com/video?id=${videoId}`, options);
+    const response = await fetch(
+      `https://youtube-v31.p.rapidapi.com/videos?part=contentDetails,snippet,statistics&id=${videoId}`, 
+      options
+    );
     
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
@@ -60,17 +63,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await response.json();
     
+    // YouTube Data API v3 格式：數據在 items 陣列中
+    if (!data.items || data.items.length === 0) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+
+    const videoData = data.items[0];
+    const snippet = videoData.snippet || {};
+    const statistics = videoData.statistics || {};
+    const contentDetails = videoData.contentDetails || {};
+
+    // 將 ISO 8601 duration 格式轉換為秒數 (PT4M13S -> 253)
+    const convertDurationToSeconds = (duration: string): string => {
+      if (!duration) return '0';
+      const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      if (!match) return '0';
+      const hours = parseInt(match[1] || '0');
+      const minutes = parseInt(match[2] || '0');
+      const seconds = parseInt(match[3] || '0');
+      return String(hours * 3600 + minutes * 60 + seconds);
+    };
+    
     // 格式化回傳數據，確保前端能正確解析，處理可能的 null 值
     const formattedData = {
-      id: data.id || videoId,
-      title: data.title || '無標題影片',
-      author: data.channelTitle || '未知頻道',
-      thumbnails: data.thumbnail || [],
-      viewCount: data.viewCount || '0',
-      publishedAt: data.publishDate || data.uploadDate || new Date().toISOString(),
-      description: data.description || '',
-      lengthSeconds: data.lengthSeconds || '0',
-      channelId: data.channelId || '',
+      id: videoData.id || videoId,
+      title: snippet.title || '無標題影片',
+      author: snippet.channelTitle || '未知頻道',
+      thumbnails: snippet.thumbnails ? Object.values(snippet.thumbnails) : [],
+      viewCount: statistics.viewCount || '0',
+      publishedAt: snippet.publishedAt || new Date().toISOString(),
+      description: snippet.description || '',
+      lengthSeconds: convertDurationToSeconds(contentDetails.duration),
+      channelId: snippet.channelId || '',
     };
     
     res.status(200).json(formattedData);
