@@ -3,10 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Moon, Sun, Youtube, FileText, Image as ImageIcon, Info, History as HistoryIcon, Sparkles, Search, X } from "lucide-react";
+import { Moon, Sun, Youtube, FileText, Info, History as HistoryIcon, Sparkles, Search, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CaptionSection } from "@/components/CaptionSection";
-import { ThumbnailSection } from "@/components/VideoInfoSection";
 import { VideoInfoSection } from "@/components/VideoInfoSection";
 import { HistorySection } from "@/components/HistorySection";
 import { useVideoStore } from "@/hooks/useVideoStore";
@@ -155,14 +154,10 @@ const Index = () => {
 
           {/* Function Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1 glass-effect">
+            <TabsList className="grid w-full grid-cols-3 h-auto p-1 glass-effect">
               <TabsTrigger value="info" className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Info className="w-4 h-4" />
                 <span className="hidden sm:inline">影片詳情</span>
-              </TabsTrigger>
-              <TabsTrigger value="thumbnail" className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                <ImageIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">縮圖</span>
               </TabsTrigger>
               <TabsTrigger value="caption" className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <FileText className="w-4 h-4" />
@@ -176,10 +171,6 @@ const Index = () => {
 
             <TabsContent value="info" className="mt-6 animate-fade-in">
               <VideoInfoSection />
-            </TabsContent>
-
-            <TabsContent value="thumbnail" className="mt-6 animate-fade-in">
-              <ThumbnailSection />
             </TabsContent>
 
             <TabsContent value="caption" className="mt-6 animate-fade-in">

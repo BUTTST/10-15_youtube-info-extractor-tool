@@ -98,37 +98,61 @@ export function VideoInfoSection() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="relative space-y-4">
-        <div className="flex items-center gap-2 text-lg">
-          <User className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-foreground">{details.author}</span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-2 bg-secondary/50 p-3 rounded-lg relative">
-            <Eye className="w-5 h-5 text-accent" />
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground">觀看次數</p>
-              <p className="text-lg font-bold text-foreground">{formatViews(details.views)}</p>
+      <CardContent className="relative">
+        {/* 主要內容區：桌面版左右排列，手機版上下排列 */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* 左側：影片詳情 (手機版在上) */}
+          <div className="flex-1 space-y-4 order-1">
+            <div className="flex items-center gap-2 text-lg">
+              <User className="w-5 h-5 text-primary" />
+              <span className="font-semibold text-foreground">{details.author}</span>
             </div>
-            <div className="absolute bottom-1 right-2 text-[18px] text-muted-foreground/45">
-              完整數字：{formatFullNumber(details.views)}
+
+            {/* 觀看次數與發佈日期：改為上下排列 */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 bg-secondary/50 p-3 rounded-lg">
+                <Eye className="w-5 h-5 text-accent" />
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">觀看次數</p>
+                  <p className="text-lg font-bold text-foreground">{formatViews(details.views)}</p>
+                  <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+                    完整數字：{formatFullNumber(details.views)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 bg-secondary/50 p-3 rounded-lg">
+                <Calendar className="w-5 h-5 text-primary" />
+                <div>
+                  <p className="text-xs text-muted-foreground">發布日期</p>
+                  <p className="text-sm font-semibold text-foreground">{formatDate(details.publishDate)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
+                影片 ID: {details.id}
+              </Badge>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-secondary/50 p-3 rounded-lg">
-            <Calendar className="w-5 h-5 text-primary" />
-            <div>
-              <p className="text-xs text-muted-foreground">發布日期</p>
-              <p className="text-sm font-semibold text-foreground">{formatDate(details.publishDate)}</p>
+          {/* 右側：縮圖 (手機版在下) */}
+          <div className="lg:w-[320px] order-2">
+            <div className="relative rounded-lg overflow-hidden border border-primary/20 group/thumbnail hover:border-primary/40 transition-all duration-300">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover/thumbnail:opacity-100 transition-opacity duration-300 z-10"></div>
+              <img
+                src={details.thumbnail}
+                alt={details.title}
+                className="w-full h-auto object-cover transform group-hover/thumbnail:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent z-20 opacity-0 group-hover/thumbnail:opacity-100 transition-opacity duration-300">
+                <p className="text-white font-medium text-xs line-clamp-2">
+                  {details.title}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
-            影片 ID: {details.id}
-          </Badge>
         </div>
       </CardContent>
     </Card>
