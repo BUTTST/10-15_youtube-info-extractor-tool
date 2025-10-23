@@ -20,9 +20,11 @@
 - **🖼️ 高清縮圖** - 自動獲取最高解析度的影片縮圖
 - **📝 影片詳情** - 標題、作者、觀看次數（中文顯示：億/萬）、發布日期
 - **💬 智能字幕** - 支援多語言字幕提取與類型標注
-  - 自動識別字幕來源（作者上傳 / 自動生成）
-  - 可選擇顯示時間碼
-  - 語言不可用時自動切換替代方案
+  - ✨ **一次性下載所有語言字幕**，切換語言無需等待
+  - 🏷️ 明確標示字幕來源（作者上傳 ✓ / 自動生成 🤖 / CC 字幕）
+  - ⏱️ 可選擇顯示或隱藏時間碼
+  - 🌍 支援 40+ 種語言自動識別
+  - 📦 智能語言代碼匹配（如 en-US、en-GB 自動對應到 en）
 - **💾 下載功能** - 支援複製和下載字幕文件
 
 ### 📖 歷史管理
@@ -30,6 +32,29 @@
 - **智能緩存** - 字幕內容持久化，避免重複抓取浪費 API 額度
 - **快速恢復** - 點擊歷史記錄立即恢復所有已獲取的字幕
 - **靈活管理** - 支援單筆刪除或全部清空
+
+## 🎯 技術亮點
+
+### 字幕下載優化
+本專案採用**混合 API 策略**，完美結合兩個 API 的優勢：
+
+1. **YouTube V31 API** - 提供字幕列表與類型標記
+   - 標示字幕來源（作者上傳 / 自動生成 / CC）
+   - 免費配額充足
+
+2. **YouTube Captions API** - 提供完整字幕內容
+   - `/download-all/` 端點一次返回所有語言
+   - SRT 格式，支援完整解析
+
+3. **預格式化策略**
+   - 後端一次性下載所有語言字幕
+   - 預先生成「有時間碼」和「無時間碼」兩個版本
+   - 前端切換語言時直接從緩存讀取，無需等待
+
+**效果：**
+- ✅ 只調用一次 API，節省配額
+- ⚡ 切換語言即時顯示，無延遲
+- 📦 完整緩存到 localStorage，關閉瀏覽器也不會丟失
 
 ## 🛠️ 技術架構
 
@@ -43,8 +68,9 @@
 ### 後端架構  
 - **平台**: Vercel Serverless Functions
 - **API**: RapidAPI
-  - [YouTube v31](https://rapidapi.com/ytdlfree/api/youtube-v31) - 影片資訊
-  - [YouTube Captions](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) - 字幕提取
+  - [YouTube v31](https://rapidapi.com/ytdlfree/api/youtube-v31) - 影片資訊與字幕列表（含類型標記）
+  - [YouTube Captions](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) - 字幕內容下載
+  - **混合策略**: 結合兩個 API 優勢，一次獲取所有語言字幕並預格式化
 
 ### PWA 功能
 - **Service Worker** - 離線緩存

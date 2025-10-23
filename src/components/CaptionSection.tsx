@@ -34,17 +34,10 @@ export function CaptionSection() {
 
   useEffect(() => {
     if (selectedLang && currentVideo?.id) {
-      const cacheKey = `${selectedLang}-${withTimestamp}`;
-      const cachedCaption = currentVideo.formattedCaptions?.[cacheKey];
-
-      if (cachedCaption) {
-        setCaptionText(cachedCaption);
-      } else {
-        setCaptionText("📝 載入字幕中...");
-        fetchFormattedCaption(currentVideo.id, selectedLang, withTimestamp).then(text => {
-          setCaptionText(text || "❌ 無法載入字幕");
-        });
-      }
+      // 從緩存讀取字幕（已在載入影片時一次性下載）
+      fetchFormattedCaption(currentVideo.id, selectedLang, withTimestamp).then(text => {
+        setCaptionText(text || "❌ 無法載入字幕");
+      });
     }
   }, [selectedLang, withTimestamp, currentVideo, fetchFormattedCaption]);
   
@@ -123,29 +116,9 @@ export function CaptionSection() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Languages className="w-4 h-4 text-muted-foreground" />
-              <Label className="text-sm font-medium">選擇語言</Label>
-            </div>
-            {selectedLang && (
-              <Button
-                onClick={() => {
-                  const track = availableCaptions?.find(t => t.code === selectedLang);
-                  if (track && currentVideo?.id) {
-                    setCaptionText("📝 重新載入字幕中...");
-                    fetchFormattedCaption(currentVideo.id, selectedLang, withTimestamp).then(text => {
-                      setCaptionText(text || "❌ 無法載入字幕");
-                    });
-                  }
-                }}
-                size="sm"
-                variant="outline"
-                className="h-8"
-              >
-                🔄 重新獲取
-              </Button>
-            )}
+          <div className="flex items-center gap-2">
+            <Languages className="w-4 h-4 text-muted-foreground" />
+            <Label className="text-sm font-medium">選擇語言</Label>
           </div>
           <Select onValueChange={setSelectedLang} value={selectedLang}>
             <SelectTrigger className="w-full h-11 border-primary/20">
