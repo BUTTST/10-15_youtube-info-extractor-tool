@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -18,7 +18,6 @@ const Index = () => {
   const [showRestoreNotification, setShowRestoreNotification] = useState(false);
   const [restoredItem, setRestoredItem] = useState<HistoryItem | null>(null);
   const { toast } = useToast();
-  const lastProcessedQueryRef = useRef<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -33,81 +32,51 @@ const Index = () => {
     }
   }, [isDark]);
 
-  const handleSharedUrl = useCallback((rawUrl: string) => {
-    const cleanedUrl = rawUrl.trim();
+  const extractSharedUrl = useCallback((search: string) => {
+    if (!search) return null;
+
+    const urlParams = new URLSearchParams(search);
+    const directUrl = urlParams.get("url");
+    if (directUrl) return directUrl.trim();
+
+    const text = urlParams.get("text") || "";
+    const title = urlParams.get("title") || "";
+    const combined = `${text} ${title}`.trim();
+
+    const urlMatch = combined.match(/https?:\/\/[^\s]+/i);
+    return urlMatch ? urlMatch[0].trim() : null;
+  }, []);
+
+  const handleSharedUrl = useCallback((sharedUrl: string) => {
+    const cleanedUrl = sharedUrl.trim();
     if (!cleanedUrl) return;
 
     setUrlInput(cleanedUrl);
 
-    fetchVideoInfo(cleanedUrl)
-      .then(() => {
-        toast({
-          title: "✅ 已接收分享",
-          description: "正在自動提取影片資訊...",
-          duration: 2000,
-        });
-      })
-      .catch(() => {
-        toast({
-          title: "❌ 提取失敗",
-          description: "無法獲取影片資訊",
-          variant: "destructive",
-        });
-      })
-      .finally(() => {
-        window.history.replaceState({}, "", window.location.pathname);
-        lastProcessedQueryRef.current = null;
+    fetchVideoInfo(cleanedUrl).then(() => {
+      toast({
+        title: "✅ 已接收分享",
+        description: "正在自動提取影片資訊...",
+        duration: 2000,
       });
+    }).catch(() => {
+      toast({
+        title: "❌ 提取失敗",
+        description: "無法獲取影片資訊",
+        variant: "destructive",
+      });
+    }).finally(() => {
+      window.history.replaceState({}, "", window.location.pathname);
+    });
   }, [fetchVideoInfo, setUrlInput, toast]);
 
   // 處理分享目標 API - 立即響應，無延遲
   useEffect(() => {
-    const extractSharedUrl = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const directUrl = urlParams.get("url");
-      if (directUrl) return directUrl;
-
-      const text = urlParams.get("text") || "";
-      const title = urlParams.get("title") || "";
-      const combined = `${text} ${title}`.trim();
-
-      const urlMatch = combined.match(/https?:\/\/[^\s]+/i);
-      return urlMatch ? urlMatch[0] : null;
-    };
-
-    const processShare = () => {
-      const currentSearch = window.location.search;
-
-      if (!currentSearch || currentSearch === lastProcessedQueryRef.current) {
-        return;
-      }
-
-      const sharedUrl = extractSharedUrl();
-
-      if (!sharedUrl) {
-        return;
-      }
-
-      lastProcessedQueryRef.current = currentSearch;
+    const sharedUrl = extractSharedUrl(window.location.search);
+    if (sharedUrl) {
       handleSharedUrl(sharedUrl);
-    };
-
-    processShare();
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        processShare();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", processShare);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", processShare);
-    };
-  }, [handleSharedUrl]);
+    }
+  }, [extractSharedUrl, handleSharedUrl]);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
