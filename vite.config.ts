@@ -239,34 +239,54 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'YouTube資訊提取器-icon-192.png', 'mask-icon.svg', 'icons/icon.svg'],
       manifest: {
         name: 'YT 工具箱',
         short_name: 'YT 工具',
         description: 'YouTube 影片字幕、縮圖與詳情獲取工具',
-        theme_color: '#8B5CF6',
+        theme_color: '#DC2626',
         background_color: '#0f0f14',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
         icons: [
           {
-            src: 'pwa-64x64.png',
+            src: 'YouTube資訊提取器-icon-16.png',
+            sizes: '16x16',
+            type: 'image/png'
+          },
+          {
+            src: 'YouTube資訊提取器-icon-32.png',
+            sizes: '32x32',
+            type: 'image/png'
+          },
+          {
+            src: 'YouTube資訊提取器-icon-48.png',
+            sizes: '48x48',
+            type: 'image/png'
+          },
+          {
+            src: 'YouTube資訊提取器-icon-64.png',
             sizes: '64x64',
             type: 'image/png'
           },
           {
-            src: 'pwa-192x192.png',
+            src: 'YouTube資訊提取器-icon-128.png',
+            sizes: '128x128',
+            type: 'image/png'
+          },
+          {
+            src: 'YouTube資訊提取器-icon-192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'YouTube資訊提取器-icon-512.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: 'maskable-icon-512x512.png',
+            src: 'YouTube資訊提取器-icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
