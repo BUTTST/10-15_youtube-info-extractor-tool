@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -18,6 +18,7 @@ const Index = () => {
   const [showRestoreNotification, setShowRestoreNotification] = useState(false);
   const [restoredItem, setRestoredItem] = useState<HistoryItem | null>(null);
   const { toast } = useToast();
+  const processedShareRef = useRef<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -32,38 +33,64 @@ const Index = () => {
     }
   }, [isDark]);
 
+  // 處理分享目標 API - 立即響應，無延遲
   useEffect(() => {
-    // 處理分享目標 API（只在首次載入時執行）
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // 嘗試多種參數名稱（url, text, title）
-    const sharedUrl = urlParams.get('url') || 
-                      urlParams.get('text') || 
-                      urlParams.get('title');
-    
-    if (sharedUrl && !urlInput) {
-      setUrlInput(sharedUrl);
+    const processShare = () => {
+      const urlParams = new URLSearchParams(window.location.search);
       
-      // 自動開始提取
-      fetchVideoInfo(sharedUrl).then(() => {
-        toast({
-          title: "✅ 已接收分享",
-          description: "正在自動提取影片資訊...",
-          duration: 2000,
-        });
-      }).catch(() => {
-        toast({
-          title: "❌ 提取失敗",
-          description: "無法獲取影片資訊",
-          variant: "destructive",
-        });
-      });
+      // 嘗試多種參數名稱（url, text, title）
+      const sharedUrl = urlParams.get('url') || 
+                        urlParams.get('text') || 
+                        urlParams.get('title');
       
-      // 清除 URL 參數避免重複觸發
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 只在組件掛載時執行一次
+      // 檢查是否已經處理過這個分享（避免重複處理）
+      if (sharedUrl && processedShareRef.current !== sharedUrl) {
+        processedShareRef.current = sharedUrl;
+        
+        // 立即覆蓋舊網址，不檢查當前是否有內容
+        setUrlInput(sharedUrl);
+        
+        // 立即開始提取，不等待任何延遲
+        fetchVideoInfo(sharedUrl).then(() => {
+          toast({
+            title: "✅ 已接收分享",
+            description: "正在自動提取影片資訊...",
+            duration: 2000,
+          });
+        }).catch(() => {
+          toast({
+            title: "❌ 提取失敗",
+            description: "無法獲取影片資訊",
+            variant: "destructive",
+          });
+        });
+        
+        // 立即清除 URL 參數避免重複觸發
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    };
+
+    // 立即執行一次
+    processShare();
+
+    // 監聽 URL 變化（處理應用已打開時的情況）
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        processShare();
+      }
+    };
+
+    // 監聽頁面可見性變化（PWA 切換回來時）
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // 監聽 focus 事件（應用獲得焦點時）
+    window.addEventListener('focus', processShare);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', processShare);
+    };
+  }, [setUrlInput, fetchVideoInfo, toast]);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
