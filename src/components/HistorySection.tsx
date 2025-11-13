@@ -21,11 +21,19 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export function HistorySection() {
+interface HistorySectionProps {
+  onRestore?: (item: HistoryItem) => void;
+}
+
+export function HistorySection({ onRestore }: HistorySectionProps) {
   const { history, removeFromHistory, clearHistory, loadFromHistory } = useVideoStore();
 
   const handleHistoryClick = (item: HistoryItem) => {
     loadFromHistory(item);
+    // 調用回調函數以觸發跳轉和通知
+    if (onRestore) {
+      onRestore(item);
+    }
   };
 
   const formatTimeAgo = (dateString: string) => {
