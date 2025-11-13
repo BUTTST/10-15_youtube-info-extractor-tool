@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -18,7 +18,7 @@ const Index = () => {
   const [showRestoreNotification, setShowRestoreNotification] = useState(false);
   const [restoredItem, setRestoredItem] = useState<HistoryItem | null>(null);
   const { toast } = useToast();
-  const processedShareRef = useRef<string | null>(null);
+  const lastProcessedQueryRef = useRef<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -33,64 +33,81 @@ const Index = () => {
     }
   }, [isDark]);
 
+  const handleSharedUrl = useCallback((rawUrl: string) => {
+    const cleanedUrl = rawUrl.trim();
+    if (!cleanedUrl) return;
+
+    setUrlInput(cleanedUrl);
+
+    fetchVideoInfo(cleanedUrl)
+      .then(() => {
+        toast({
+          title: "✅ 已接收分享",
+          description: "正在自動提取影片資訊...",
+          duration: 2000,
+        });
+      })
+      .catch(() => {
+        toast({
+          title: "❌ 提取失敗",
+          description: "無法獲取影片資訊",
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        window.history.replaceState({}, "", window.location.pathname);
+        lastProcessedQueryRef.current = null;
+      });
+  }, [fetchVideoInfo, setUrlInput, toast]);
+
   // 處理分享目標 API - 立即響應，無延遲
   useEffect(() => {
-    const processShare = () => {
+    const extractSharedUrl = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      
-      // 嘗試多種參數名稱（url, text, title）
-      const sharedUrl = urlParams.get('url') || 
-                        urlParams.get('text') || 
-                        urlParams.get('title');
-      
-      // 檢查是否已經處理過這個分享（避免重複處理）
-      if (sharedUrl && processedShareRef.current !== sharedUrl) {
-        processedShareRef.current = sharedUrl;
-        
-        // 立即覆蓋舊網址，不檢查當前是否有內容
-        setUrlInput(sharedUrl);
-        
-        // 立即開始提取，不等待任何延遲
-        fetchVideoInfo(sharedUrl).then(() => {
-          toast({
-            title: "✅ 已接收分享",
-            description: "正在自動提取影片資訊...",
-            duration: 2000,
-          });
-        }).catch(() => {
-          toast({
-            title: "❌ 提取失敗",
-            description: "無法獲取影片資訊",
-            variant: "destructive",
-          });
-        });
-        
-        // 立即清除 URL 參數避免重複觸發
-        window.history.replaceState({}, '', window.location.pathname);
-      }
+      const directUrl = urlParams.get("url");
+      if (directUrl) return directUrl;
+
+      const text = urlParams.get("text") || "";
+      const title = urlParams.get("title") || "";
+      const combined = `${text} ${title}`.trim();
+
+      const urlMatch = combined.match(/https?:\/\/[^\s]+/i);
+      return urlMatch ? urlMatch[0] : null;
     };
 
-    // 立即執行一次
+    const processShare = () => {
+      const currentSearch = window.location.search;
+
+      if (!currentSearch || currentSearch === lastProcessedQueryRef.current) {
+        return;
+      }
+
+      const sharedUrl = extractSharedUrl();
+
+      if (!sharedUrl) {
+        return;
+      }
+
+      lastProcessedQueryRef.current = currentSearch;
+      handleSharedUrl(sharedUrl);
+    };
+
     processShare();
 
-    // 監聽 URL 變化（處理應用已打開時的情況）
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         processShare();
       }
     };
 
-    // 監聽頁面可見性變化（PWA 切換回來時）
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // 監聽 focus 事件（應用獲得焦點時）
-    window.addEventListener('focus', processShare);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", processShare);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', processShare);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", processShare);
     };
-  }, [setUrlInput, fetchVideoInfo, toast]);
+  }, [handleSharedUrl]);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
