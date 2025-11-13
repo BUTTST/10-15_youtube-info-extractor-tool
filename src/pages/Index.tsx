@@ -35,9 +35,25 @@ const Index = () => {
   useEffect(() => {
     // 處理分享目標 API（只在首次載入時執行）
     const urlParams = new URLSearchParams(window.location.search);
-    const sharedUrl = urlParams.get('url');
+    
+    // 嘗試多種參數名稱（url, text, title）
+    const sharedUrl = urlParams.get('url') || 
+                      urlParams.get('text') || 
+                      urlParams.get('title');
+    
+    console.log('Share Target Debug:', {
+      hasParams: window.location.search,
+      url: urlParams.get('url'),
+      text: urlParams.get('text'),
+      title: urlParams.get('title'),
+      sharedUrl,
+      currentUrlInput: urlInput
+    });
+    
     if (sharedUrl && !urlInput) {
+      console.log('Processing shared URL:', sharedUrl);
       setUrlInput(sharedUrl);
+      
       // 自動開始提取
       fetchVideoInfo(sharedUrl).then(() => {
         toast({
@@ -45,13 +61,15 @@ const Index = () => {
           description: "正在自動提取影片資訊...",
           duration: 2000,
         });
-      }).catch(() => {
+      }).catch((error) => {
+        console.error('Failed to fetch video info:', error);
         toast({
           title: "❌ 提取失敗",
           description: "無法獲取影片資訊",
           variant: "destructive",
         });
       });
+      
       // 清除 URL 參數避免重複觸發
       window.history.replaceState({}, '', window.location.pathname);
     }
