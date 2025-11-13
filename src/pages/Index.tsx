@@ -41,17 +41,7 @@ const Index = () => {
                       urlParams.get('text') || 
                       urlParams.get('title');
     
-    console.log('Share Target Debug:', {
-      hasParams: window.location.search,
-      url: urlParams.get('url'),
-      text: urlParams.get('text'),
-      title: urlParams.get('title'),
-      sharedUrl,
-      currentUrlInput: urlInput
-    });
-    
     if (sharedUrl && !urlInput) {
-      console.log('Processing shared URL:', sharedUrl);
       setUrlInput(sharedUrl);
       
       // 自動開始提取
@@ -61,8 +51,7 @@ const Index = () => {
           description: "正在自動提取影片資訊...",
           duration: 2000,
         });
-      }).catch((error) => {
-        console.error('Failed to fetch video info:', error);
+      }).catch(() => {
         toast({
           title: "❌ 提取失敗",
           description: "無法獲取影片資訊",
