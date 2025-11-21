@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { useVideoStore } from "@/hooks/useVideoStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Calendar, User, ExternalLink, Info, Image as ImageIcon } from "lucide-react";
+import { Eye, Calendar, User, ExternalLink, Info, Image as ImageIcon, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export function VideoInfoSection() {
   const { currentVideo, isLoading } = useVideoStore();
+  const [isDownloading, setIsDownloading] = useState(false);
+  const { toast } = useToast();
 
   if (isLoading && !currentVideo) {
     return (
@@ -80,6 +84,106 @@ export function VideoInfoSection() {
     });
   }
 
+  // 清理文件名中的無效字符
+  const sanitizeFileName = (fileName: string): string => {
+    return fileName
+      .replace(/[<>:"/\\|?*]/g, '') // 移除無效字符
+      .replace(/\s+/g, '_') // 空格替換為底線
+      .substring(0, 100); // 限制長度
+  }
+
+  const handleDownloadMP3 = async () => {
+    if (!currentVideo || !details.id) {
+      toast({
+        title: "下載失敗",
+        description: "影片資訊不可用",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDownloading(true);
+
+    try {
+      const response = await fetch(`/api/downloadMP3?id=${details.id}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || '下載失敗');
+      }
+
+      // 檢查響應類型
+      const contentType = response.headers.get('content-type');
+      
+      // 如果是 JSON 響應（包含下載鏈接）
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        const downloadUrl = data.downloadUrl;
+        
+        if (downloadUrl) {
+          // 創建臨時鏈接並觸發下載
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = `${sanitizeFileName(details.title)}.mp3`;
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          toast({
+            title: "下載開始",
+            description: "MP3 檔案下載已開始",
+          });
+        } else {
+          throw new Error('API 未返回下載鏈接');
+        }
+      } 
+      // 如果是音頻文件流（直接下載）
+      else if (contentType && contentType.includes('audio/')) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${sanitizeFileName(details.title)}.mp3`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "下載成功",
+          description: "MP3 檔案已下載",
+        });
+      } 
+      // 其他情況，嘗試作為文件流處理
+      else {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${sanitizeFileName(details.title)}.mp3`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "下載成功",
+          description: "MP3 檔案已下載",
+        });
+      }
+    } catch (error: any) {
+      console.error('Download MP3 error:', error);
+      toast({
+        title: "下載失敗",
+        description: error.message || "無法下載 MP3，請稍後再試",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
   return (
     <Card className="glass-effect border-primary/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
@@ -130,10 +234,28 @@ export function VideoInfoSection() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-3">
               <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20">
                 影片 ID: {details.id}
               </Badge>
+              <Button
+                onClick={handleDownloadMP3}
+                disabled={isDownloading}
+                variant="default"
+                className="gap-2"
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    下載中...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4" />
+                    下載MP3
+                  </>
+                )}
+              </Button>
             </div>
           </div>
 
