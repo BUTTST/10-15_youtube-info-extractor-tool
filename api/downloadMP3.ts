@@ -41,23 +41,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 檢查響應類型
     const contentType = response.headers.get('content-type');
     
-    // 如果返回的是 JSON（包含下載鏈接）
+    // 如果返回的是 JSON（包含下載鏈接或處理狀態）
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
       
-      // API 可能返回 { link: "..." } 或 { url: "..." } 或 { downloadUrl: "..." }
-      const downloadUrl = data.link || data.url || data.downloadUrl || data.mp3 || data.download;
-      
-      if (downloadUrl) {
-        return res.status(200).json({ 
-          downloadUrl: downloadUrl,
-          title: data.title || null,
-          status: data.status || 'ok'
-        });
-      }
-      
-      // 如果 JSON 中沒有下載鏈接，返回整個響應
-      return res.status(200).json(data);
+      // 返回完整的響應，包括 status, progress, link 等
+      // 讓前端根據 status 決定是否需要輪詢
+      return res.status(200).json({
+        status: data.status || 'unknown',
+        link: data.link || '',
+        title: data.title || null,
+        progress: data.progress || null,
+        duration: data.duration || null,
+        msg: data.msg || null,
+        // 為了向後兼容，也提供 downloadUrl
+        downloadUrl: data.link || data.url || data.downloadUrl || data.mp3 || data.download || ''
+      });
     }
     
     // 如果返回的是文件流（直接是 MP3 文件）

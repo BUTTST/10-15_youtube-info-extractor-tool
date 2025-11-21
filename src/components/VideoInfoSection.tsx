@@ -105,73 +105,93 @@ export function VideoInfoSection() {
     setIsDownloading(true);
 
     try {
-      const response = await fetch(`/api/downloadMP3?id=${details.id}`);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || '下載失敗');
-      }
-
-      // 檢查響應類型
-      const contentType = response.headers.get('content-type');
-      
-      // 如果是 JSON 響應（包含下載鏈接）
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        const downloadUrl = data.downloadUrl;
+      // 輪詢檢查處理狀態
+      const pollStatus = async (): Promise<string> => {
+        const maxAttempts = 60; // 最多嘗試 60 次（約 5 分鐘）
+        const pollInterval = 5000; // 每 5 秒檢查一次
         
-        if (downloadUrl) {
-          // 創建臨時鏈接並觸發下載
-          const link = document.createElement('a');
-          link.href = downloadUrl;
-          link.download = `${sanitizeFileName(details.title)}.mp3`;
-          link.target = '_blank';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          const response = await fetch(`/api/downloadMP3?id=${details.id}`);
           
-          toast({
-            title: "下載開始",
-            description: "MP3 檔案下載已開始",
-          });
-        } else {
-          throw new Error('API 未返回下載鏈接');
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            throw new Error(errorData.error || '下載失敗');
+          }
+
+          const contentType = response.headers.get('content-type');
+          
+          // 如果是音頻文件流（直接下載）
+          if (contentType && contentType.includes('audio/')) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${sanitizeFileName(details.title)}.mp3`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            return 'success';
+          }
+          
+          // 如果是 JSON 響應
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            
+            // 檢查狀態
+            if (data.status === 'ok' || data.status === 'ready' || data.status === 'success') {
+              const downloadUrl = data.link || data.downloadUrl || data.url;
+              
+              if (downloadUrl && downloadUrl.trim() !== '') {
+                // 創建臨時鏈接並觸發下載
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `${sanitizeFileName(details.title)}.mp3`;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                return 'success';
+              }
+            }
+            
+            // 如果還在處理中，繼續輪詢
+            if (data.status === 'processing' || data.status === 'in process') {
+              const progress = data.progress || 0;
+              // 更新 toast 顯示進度（可選）
+              if (attempt % 6 === 0) { // 每 30 秒更新一次提示
+                toast({
+                  title: "處理中...",
+                  description: `轉換進度：${progress}%`,
+                });
+              }
+              
+              // 等待後繼續輪詢
+              await new Promise(resolve => setTimeout(resolve, pollInterval));
+              continue;
+            }
+            
+            // 如果狀態是錯誤
+            if (data.status === 'error' || data.status === 'failed') {
+              throw new Error(data.msg || data.message || '轉換失敗');
+            }
+          }
+          
+          // 其他情況，等待後繼續
+          await new Promise(resolve => setTimeout(resolve, pollInterval));
         }
-      } 
-      // 如果是音頻文件流（直接下載）
-      else if (contentType && contentType.includes('audio/')) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${sanitizeFileName(details.title)}.mp3`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
         
-        toast({
-          title: "下載成功",
-          description: "MP3 檔案已下載",
-        });
-      } 
-      // 其他情況，嘗試作為文件流處理
-      else {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${sanitizeFileName(details.title)}.mp3`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        toast({
-          title: "下載成功",
-          description: "MP3 檔案已下載",
-        });
-      }
+        // 超過最大嘗試次數
+        throw new Error('處理超時，請稍後再試');
+      };
+
+      await pollStatus();
+      
+      toast({
+        title: "下載成功",
+        description: "MP3 檔案下載已開始",
+      });
+      
     } catch (error: any) {
       console.error('Download MP3 error:', error);
       toast({
