@@ -5,8 +5,10 @@
 [![部署在 Vercel](https://vercel.com/button)](https://vercel.com)
 
 
-| [Vercel主控台](https://vercel.com/titans-projects-0ee27614/10-15-youtube-info-extractor-tool) | [項目頁面](https://10-15-youtube-info-extractor-tool.vercel.app/) | [YouTube v31 資訊擷取](https://rapidapi.com/ytdlfree/api/youtube-v31) | [YouTube CC字幕](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) |
-| :---: | :---: | :---: | :---: |
+| [Vercel主控台](https://vercel.com/titans-projects-0ee27614/10-15-youtube-info-extractor-tool) | [項目頁面](https://10-15-youtube-info-extractor-tool.vercel.app/) | [YouTube v31 資訊擷取](https://rapidapi.com/ytdlfree/api/youtube-v31) | [YouTube CC字幕](https://rapidapi.com/nikzeferis/api/youtube-captions-transcript-subtitles-video-combiner) | [Rapidapi訂閱管理](https://rapidapi.com/developer/billing/subscriptions-and-usage) |
+| :---: | :---: | :---: | :---: | :---: |
+
+
 
 ## ✨ 主要功能
 
