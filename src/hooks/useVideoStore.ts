@@ -35,11 +35,20 @@ interface VideoState {
   error: string | null;
   currentVideo: HistoryItem | null;
   history: HistoryItem[];
+  // playlist / download UI state
+  playlistItems: Array<any> | null;
+  downloadCandidatesCache: { [videoId: string]: any } | null;
+  isDownloadPanelOpen: boolean;
 
   // Actions
   setUrlInput: (url: string) => void;
   fetchVideoInfo: (url: string) => Promise<void>;
   fetchFormattedCaption: (videoId: string, lang: string, withTimestamp: boolean) => Promise<string>;
+  // Playlist & download (degraded: return direct URLs)
+  fetchPlaylistInfo: (url: string) => Promise<void>;
+  fetchDownloadCandidates: (url: string, format: 'mp4' | 'mp3') => Promise<any>;
+  openDownloadPanel: () => void;
+  closeDownloadPanel: () => void;
   clearCurrentVideo: () => void;
   loadFromHistory: (item: HistoryItem) => Promise<void>;
   
@@ -59,6 +68,10 @@ export const useVideoStore = create<VideoState>()(
       error: null,
       currentVideo: null,
       history: [],
+      // download/playlist UI state (degraded: provide direct URLs only)
+      playlistItems: null,
+      downloadCandidatesCache: null,
+      isDownloadPanelOpen: false,
 
       // --- Actions ---
       setUrlInput: (url) => set({ urlInput: url }),
@@ -179,6 +192,50 @@ export const useVideoStore = create<VideoState>()(
           set({ isLoading: false });
         }
       },
+
+      // Fetch playlist info (uses server API)
+      fetchPlaylistInfo: async (url) => {
+        if (!url) return;
+        set({ isLoading: true, error: null, playlistItems: null });
+        try {
+          const res = await fetch(`/api/getPlaylistInfo?url=${encodeURIComponent(url)}`);
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.error || 'Failed to fetch playlist');
+          }
+          const data = await res.json();
+          set({ playlistItems: data.items || [], isLoading: false });
+        } catch (err: any) {
+          console.warn('fetchPlaylistInfo error', err);
+          set({ error: err.message || '無法取得播放清單', isLoading: false });
+        }
+      },
+
+      // Fetch direct download candidate URLs for a video (degraded: no server-side transcode)
+      fetchDownloadCandidates: async (url, format) => {
+        if (!url) return null;
+        set({ isLoading: true, error: null });
+        try {
+          const res = await fetch(`/api/getDownloadUrls?url=${encodeURIComponent(url)}&format=${encodeURIComponent(format)}`);
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.error || 'Failed to fetch download URLs');
+          }
+          const data = await res.json();
+          const cache = get().downloadCandidatesCache || {};
+          cache[data.id] = data;
+          set({ downloadCandidatesCache: cache, isLoading: false });
+          return data;
+        } catch (err: any) {
+          console.warn('fetchDownloadCandidates error', err);
+          set({ error: err.message || '無法取得下載候選', isLoading: false });
+          return null;
+        }
+      },
+
+      // UI controls for download panel
+      openDownloadPanel: () => set({ isDownloadPanelOpen: true }),
+      closeDownloadPanel: () => set({ isDownloadPanelOpen: false }),
 
       fetchFormattedCaption: async (videoId, lang, withTimestamp) => {
         // 直接從緩存讀取，不再調用 API

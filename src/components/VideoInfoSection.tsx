@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Eye, Calendar, User, ExternalLink, Info, Image as ImageIcon, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import DownloadPanel from "./DownloadPanel";
 
 export function VideoInfoSection() {
   const { currentVideo, isLoading } = useVideoStore();
@@ -205,21 +206,35 @@ export function VideoInfoSection() {
   }
 
   return (
-    <Card className="glass-effect border-primary/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
+    <>
+      <Card className="glass-effect border-primary/20 overflow-hidden group hover:shadow-lg transition-all duration-300">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       <CardHeader className="relative">
         <div className="flex items-start justify-between gap-4">
           <CardTitle className="text-2xl font-bold line-clamp-2 flex-1">
             {details.title}
           </CardTitle>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="shrink-0"
-            onClick={() => window.open(details.url, '_blank')}
-          >
-            <ExternalLink className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="shrink-0"
+              onClick={() => window.open(details.url, '_blank')}
+            >
+              <ExternalLink className="w-5 h-5" />
+            </Button>
+            <Button
+              size="sm"
+              className="h-9"
+              onClick={() => {
+                // open download panel via dispatching a custom event (store handles panel)
+                const evt = new CustomEvent('openDownloadPanel');
+                window.dispatchEvent(evt);
+              }}
+            >
+              下載
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="relative">
@@ -297,7 +312,10 @@ export function VideoInfoSection() {
           </div>
         </div>
       </CardContent>
-    </Card>
+      </Card>
+      {/* Mount download panel so it can open when requested */}
+      <DownloadPanel />
+    </>
   );
 }
 
