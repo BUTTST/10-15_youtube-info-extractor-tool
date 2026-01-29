@@ -39,6 +39,8 @@ interface VideoState {
   playlistItems: Array<any> | null;
   downloadCandidatesCache: { [videoId: string]: any } | null;
   isDownloadPanelOpen: boolean;
+  // selected items for download (videoId -> true)
+  selectedForDownload: { [videoId: string]: boolean } | null;
 
   // Actions
   setUrlInput: (url: string) => void;
