@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { parseYouTubeUrl } from '@/lib/parseYouTubeUrl';
 
 // --- Type Definitions ---
 export interface VideoDetails {
@@ -189,6 +190,21 @@ export const useVideoStore = create<VideoState>()(
 
           set({ currentVideo: newHistoryItem, error: null });
           get().addOrUpdateHistory(newHistoryItem);
+
+          // If input URL references a playlist or is a video_in_playlist, fetch playlist items
+          try {
+            const parsed = parseYouTubeUrl(url);
+            if (parsed.playlist_id || parsed.url_kind === 'playlist' || parsed.url_kind === 'video_in_playlist') {
+              // fire and await playlist fetch to populate UI
+              await get().fetchPlaylistInfo(url);
+            } else {
+              // clear previous playlistItems if any
+              set({ playlistItems: null });
+            }
+          } catch (e) {
+            // ignore parsing errors
+            console.warn('parseYouTubeUrl error', e);
+          }
 
         } catch (err: any) {
           console.error('Fetch video info error:', err);
