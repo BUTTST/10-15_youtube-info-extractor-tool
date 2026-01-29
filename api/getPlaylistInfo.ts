@@ -1,27 +1,18 @@
-function extractPlaylistId(url: string): string | null {
-  try {
-    const u = new URL(url);
-    const list = u.searchParams.get('list');
-    if (list) return list;
-  } catch (e) {
-    // not a full url, maybe raw id
-    if (/^[a-zA-Z0-9_-]+$/.test(url)) return url;
-  }
-  return null;
-}
+import { parseYouTubeUrl } from './_utils/parseYouTubeUrl';
 
 export default async function handler(req: any, res: any) {
-  const { url } = req.query;
+  const { url, maxItems } = req.query;
 
   if (!url || typeof url !== 'string') {
     return res.status(400).json({ error: 'Playlist URL or ID is required' });
   }
 
-  const playlistId = extractPlaylistId(url);
-  if (!playlistId) {
-    return res.status(400).json({ error: 'Invalid playlist URL or ID' });
+  const parsed = parseYouTubeUrl(url);
+  if (!parsed.playlist_id) {
+    return res.status(400).json({ error: 'Invalid playlist URL or ID', parsed });
   }
 
+  const playlistId = parsed.playlist_id;
   const apiKey = (globalThis as any)?.process?.env?.RAPIDAPI_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured. Please set RAPIDAPI_KEY.' });
@@ -36,32 +27,50 @@ export default async function handler(req: any, res: any) {
   };
 
   try {
-    // Use playlistItems endpoint to list playlist videos (first page)
-    const resp = await fetch(`https://youtube-v31.p.rapidapi.com/playlistItems?playlistId=${playlistId}&part=snippet,contentDetails&maxResults=50`, options);
-    if (!resp.ok) {
-      const details = await resp.json().catch(() => ({}));
-      return res.status(resp.status).json({ error: 'Failed to fetch playlist', details });
-    }
+    const items: any[] = [];
+    let nextPageToken: string | null = null;
+    const limit = Math.min(Number(maxItems || 200), 500); // safety cap
+    let fetched = 0;
 
-    const data = await resp.json();
-    const items = (data.items || []).map((it: any) => {
-      const thumbs = it.snippet?.thumbnails || {};
-      const thumbArr = Object.values(thumbs) as any[];
-      const thumbUrl = thumbArr.length ? (thumbArr[thumbArr.length - 1]?.url || '') : '';
-      return {
-        id: it.contentDetails?.videoId || '',
-        title: it.snippet?.title || '無標題',
-        thumbnail: thumbUrl,
-        publishedAt: it.contentDetails?.videoPublishedAt || it.snippet?.publishedAt || '',
-      };
-    });
+    do {
+      const pageSize = Math.min(50, limit - fetched);
+      const urlStr = `https://youtube-v31.p.rapidapi.com/playlistItems?playlistId=${playlistId}&part=snippet,contentDetails&maxResults=${pageSize}${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`;
+      const resp = await fetch(urlStr, options);
+      if (!resp.ok) {
+        const details = await resp.json().catch(() => ({}));
+        return res.status(resp.status).json({ error: 'Failed to fetch playlist', details });
+      }
+      const data = await resp.json();
+      const pageItems = (data.items || []).map((it: any) => {
+        const thumbs = it.snippet?.thumbnails || {};
+        const thumbArr = Object.values(thumbs) as any[];
+        const thumbUrl = thumbArr.length ? (thumbArr[thumbArr.length - 1]?.url || '') : '';
+        return {
+          id: it.contentDetails?.videoId || '',
+          title: it.snippet?.title || '無標題',
+          thumbnail: thumbUrl,
+          publishedAt: it.contentDetails?.videoPublishedAt || it.snippet?.publishedAt || '',
+        };
+      });
 
-    return res.status(200).json({
+      items.push(...pageItems);
+      fetched += pageItems.length;
+      nextPageToken = data.nextPageToken || null;
+    } while (nextPageToken && fetched < limit);
+
+    // Build response with parse metadata
+    const response = {
+      url_kind: parsed.url_kind,
       playlistId,
-      title: data.snippet?.title || '',
+      playlist_kind: parsed.playlist_kind,
+      processable_level: parsed.processable_level,
+      title: '', // RapidAPI playlist title endpoint not used here
       items,
-      totalResults: data.pageInfo?.totalResults || items.length,
-    });
+      totalFetched: items.length,
+      partial: !!nextPageToken
+    };
+
+    return res.status(200).json(response);
   } catch (err: any) {
     console.error('getPlaylistInfo error:', err?.message || err);
     return res.status(500).json({ error: 'Internal error', details: err?.message });

@@ -1,4 +1,5 @@
 import ytdl from 'ytdl-core';
+import { parseYouTubeUrl } from './_utils/parseYouTubeUrl';
 
 function bytesToHuman(bytes: number) {
   if (!bytes || bytes <= 0) return '未知';
@@ -19,33 +20,32 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'YouTube URL is required' });
   }
 
+  const parsed = parseYouTubeUrl(url);
+
   try {
     // Use ytdl-core to get video info and formats
     const info = await ytdl.getInfo(url);
     const lengthSeconds = Number(info.videoDetails.lengthSeconds || 0);
 
     // Collect useful formats
-    const formats = info.formats.filter(f => f.url);
+    const formats = info.formats.filter((f: any) => f.url);
 
     // Determine desired candidate formats based on requested format
     const candidates = formats
-      .filter(f => {
+      .filter((f: any) => {
         if (format === 'mp3') {
-          // audio-only formats (m4a/webm)
           return /audio\//.test(String(f.mimeType));
         }
-        // mp4 / video: prefer container mp4 or mp4-like with both audio+video
         return /video\//.test(String(f.mimeType));
       })
-      // sort by bitrate/quality descending
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         const ab = Number(a.averageBitrate || a.bitrate || 0);
         const bb = Number(b.averageBitrate || b.bitrate || 0);
         return bb - ab;
       });
 
     // Map to response entries with estimated sizes
-    const mapped = candidates.map(f => {
+    const mapped = candidates.map((f: any) => {
       let sizeBytes: number | null = null;
       if (f.contentLength) {
         sizeBytes = Number(f.contentLength);
@@ -64,17 +64,19 @@ export default async function handler(req: any, res: any) {
         url: f.url,
         estimatedSizeBytes: sizeBytes,
         estimatedSizeHuman: sizeBytes ? bytesToHuman(sizeBytes) : '未知',
+        estimated: !Boolean(f.contentLength)
       };
     });
 
-    // Return top candidates and basic metadata
     const response = {
+      url_kind: parsed.url_kind,
+      raw_url: parsed.raw_url,
       id: info.videoDetails.videoId,
       title: info.videoDetails.title,
       lengthSeconds,
       thumbnails: info.videoDetails.thumbnail?.thumbnails || [],
-      bestCandidates: mapped.slice(0, 5),
-      allCandidatesCount: mapped.length,
+      candidates: mapped,
+      candidatesCount: mapped.length,
     };
 
     return res.status(200).json(response);

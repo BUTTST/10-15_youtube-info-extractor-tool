@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { useVideoStore } from '@/hooks/useVideoStore';
 
@@ -11,10 +11,17 @@ export function DownloadPanel() {
     fetchDownloadCandidates,
     downloadCandidatesCache,
     openDownloadPanel,
+    selectedForDownload,
+    toggleSelectForDownload,
+    selectAllForDownload,
+    clearAllSelectedForDownload,
   } = useVideoStore();
 
   const [format, setFormat] = useState<'mp4' | 'mp3'>('mp4');
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [selectAllChecked, setSelectAllChecked] = useState(false);
+  const [wrapInFolder, setWrapInFolder] = useState(false);
+  const [folderName, setFolderName] = useState('');
 
   if (!isDownloadPanelOpen) return null;
 
@@ -31,6 +38,56 @@ export function DownloadPanel() {
     await fetchDownloadCandidates(videoUrl, format);
     setLoadingId(null);
   };
+
+  const bytesToHuman = (bytes?: number | null) => {
+    if (!bytes || bytes <= 0) return '未知';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let i = 0;
+    let v = bytes;
+    while (v >= 1024 && i < units.length - 1) {
+      v /= 1024;
+      i++;
+    }
+    return `${v.toFixed(2)} ${units[i]}`;
+  };
+
+  const playlistIds = useMemo(() => (playlistItems || []).map((it: any) => it.id), [playlistItems]);
+
+  useEffect(() => {
+    setSelectAllChecked(playlistIds.length > 0 && playlistIds.every(id => (selectedForDownload || {})[id]));
+  }, [playlistIds, selectedForDownload]);
+
+  const toggleSelectAll = () => {
+    if (selectAllChecked) {
+      clearAllSelectedForDownload();
+      setSelectAllChecked(false);
+    } else {
+      selectAllForDownload(playlistIds);
+      setSelectAllChecked(true);
+    }
+  };
+
+  const handleToggleItem = (id: string, checked: boolean) => {
+    toggleSelectForDownload(id, checked);
+  };
+
+  const selectedIds = useMemo(() => Object.keys(selectedForDownload || {}).filter(k => (selectedForDownload || {})[k]), [selectedForDownload]);
+
+  const totalEstimatedBytes = useMemo(() => {
+    let total = 0;
+    let unknown = false;
+    for (const id of selectedIds) {
+      const info = downloadCandidatesCache?.[id];
+      const candidate = info?.candidates?.[0];
+      const size = candidate?.estimatedSizeBytes;
+      if (!size) {
+        unknown = true;
+      } else {
+        total += Number(size);
+      }
+    }
+    return { total, unknown };
+  }, [selectedIds, downloadCandidatesCache]);
 
   const renderCandidates = (videoId: string) => {
     const cached = downloadCandidatesCache?.[videoId];
@@ -98,18 +155,83 @@ export function DownloadPanel() {
 
           {playlistItems && playlistItems.length > 0 && (
             <div className="p-3 border rounded space-y-2 max-h-64 overflow-auto">
-              <div className="font-medium">播放清單：可逐項取得下載連結</div>
-              {playlistItems.map((item: any) => (
-                <div key={item.id} className="flex items-center gap-3 p-2 border-b last:border-b-0">
-                  <img src={item.thumbnail} alt={item.title} className="w-16 h-9 object-cover rounded" />
-                  <div className="flex-1 text-sm">
-                    <div className="font-medium line-clamp-2">{item.title}</div>
-                  </div>
-                  <div>
-                    <Button size="sm" onClick={() => handleFetch(`https://www.youtube.com/watch?v=${item.id}`)}>取得</Button>
-                  </div>
+              <div className="flex items-center justify-between">
+                <div className="font-medium">播放清單：可逐項取得下載連結</div>
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={selectAllChecked} onChange={toggleSelectAll} />
+                    <span>全選</span>
+                  </label>
                 </div>
-              ))}
+              </div>
+              {playlistItems.map((item: any) => {
+                const info = downloadCandidatesCache?.[item.id];
+                const sizeHint = info?.candidates?.[0]?.estimatedSizeHuman || '未知';
+                return (
+                  <div key={item.id} className="flex items-center gap-3 p-2 border-b last:border-b-0">
+                    <input
+                      type="checkbox"
+                      checked={!!(selectedForDownload || {})[item.id]}
+                      onChange={(e) => handleToggleItem(item.id, e.target.checked)}
+                    />
+                    <img src={item.thumbnail} alt={item.title} className="w-16 h-9 object-cover rounded" />
+                    <div className="flex-1 text-sm">
+                      <div className="font-medium line-clamp-2">{item.title}</div>
+                      <div className="text-xs text-muted-foreground">大小預估：{sizeHint}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" onClick={() => handleFetch(`https://www.youtube.com/watch?v=${item.id}`)}>取得</Button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="mt-2 flex items-center justify-between">
+                <div className="text-sm">
+                  已選：{selectedIds.length} 項
+                  <span className="ml-3">總預估大小：{totalEstimatedBytes.unknown ? `${bytesToHuman(totalEstimatedBytes.total)}（含未知）` : bytesToHuman(totalEstimatedBytes.total)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={wrapInFolder} onChange={(e) => setWrapInFolder(e.target.checked)} />
+                    <span>包成資料夾</span>
+                  </label>
+                </div>
+              </div>
+
+              {wrapInFolder && (
+                <div className="mt-2">
+                  <input
+                    className="w-full border p-2 rounded"
+                    placeholder="資料夾名稱（建議：channel-playlist 或 videoTitle）"
+                    value={folderName}
+                    onChange={(e) => setFolderName(e.target.value)}
+                  />
+                </div>
+              )}
+
+              <div className="mt-3 flex gap-2">
+                <Button
+                  onClick={() => {
+                    // trigger downloads for selected (open candidate url in new tab)
+                    for (const id of selectedIds) {
+                      const info = downloadCandidatesCache?.[id];
+                      const url = info?.candidates?.[0]?.url;
+                      if (url) window.open(url, '_blank');
+                    }
+                  }}
+                  disabled={selectedIds.length === 0}
+                >
+                  逐個下載已選項目
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled
+                  title="Serverless 模式下暫不支援伺服器端打包。如需打包請使用外部 worker/服務。"
+                >
+                  打包為 ZIP（不支援）
+                </Button>
+              </div>
             </div>
           )}
         </div>

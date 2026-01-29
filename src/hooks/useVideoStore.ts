@@ -49,6 +49,10 @@ interface VideoState {
   fetchDownloadCandidates: (url: string, format: 'mp4' | 'mp3') => Promise<any>;
   openDownloadPanel: () => void;
   closeDownloadPanel: () => void;
+  // selection helpers
+  toggleSelectForDownload: (videoId: string, selected: boolean) => void;
+  selectAllForDownload: (videoIds: string[]) => void;
+  clearAllSelectedForDownload: () => void;
   clearCurrentVideo: () => void;
   loadFromHistory: (item: HistoryItem) => Promise<void>;
   
@@ -75,6 +79,8 @@ export const useVideoStore = create<VideoState>()(
 
       // --- Actions ---
       setUrlInput: (url) => set({ urlInput: url }),
+      // selection state persisted transiently in memory; not part of persisted storage
+      selectedForDownload: {},
 
       fetchVideoInfo: async (url) => {
         if (!url) return;
@@ -236,6 +242,26 @@ export const useVideoStore = create<VideoState>()(
       // UI controls for download panel
       openDownloadPanel: () => set({ isDownloadPanelOpen: true }),
       closeDownloadPanel: () => set({ isDownloadPanelOpen: false }),
+      
+      // Selection helpers for playlist/download UI
+      toggleSelectForDownload: (videoId: string, selected: boolean) => {
+        set(state => {
+          const sel = (state as any).selectedForDownload || {};
+          if (selected) sel[videoId] = true;
+          else delete sel[videoId];
+          return { ...(state as any), selectedForDownload: sel };
+        });
+      },
+      selectAllForDownload: (videoIds: string[]) => {
+        set(state => {
+          const sel: any = {};
+          (videoIds || []).forEach(id => sel[id] = true);
+          return { ...(state as any), selectedForDownload: sel };
+        });
+      },
+      clearAllSelectedForDownload: () => {
+        set({ selectedForDownload: {} });
+      },
 
       fetchFormattedCaption: async (videoId, lang, withTimestamp) => {
         // 直接從緩存讀取，不再調用 API
